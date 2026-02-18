@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="bg_dark">#1A1B26</color>
+
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="btn_blue">#3498DB</color>
+    <color name="health_green">#52B766</color>
+
+    <color name="class_guerrier">#E74C3C</color>
+    <color name="class_mage">#9B59B6</color>
+    <color name="class_soigneur">#2ECC71</color>
+    <color name="class_tank">#34495E</color>
+
+    <color name="btn_y_yellow">#EBCB8B</color>
+    <color name="btn_x_blue">#81A1C1</color>
+    <color name="btn_b_red">#BF616A</color>
+    <color name="btn_a_green">#A3BE8C</color>
+    <color name="dpad_color">#2F334D</color>
 </resources>

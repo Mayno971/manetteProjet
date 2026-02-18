@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_dark"
+    tools:ignore="MissingDefaultResource">
+
+    <LinearLayout
+        android:id="@+id/top_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center_vertical"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/text_classe_joueur"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="GUERRIER"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:textSize="18sp"/>
+
+        <ProgressBar
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="20dp"
+            android:layout_weight="1"
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp"
+            android:progress="80"
+            android:progressTint="@color/health_green"
+            android:progressBackgroundTint="@color/black" />
+
+        <ImageView
+            android:id="@+id/btn_disconnect"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"/>
+    </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_up"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginStart="90dp"
+        android:layout_marginTop="30dp"
+        app:cornerRadius="30dp"
+        app:backgroundTint="@color/dpad_color"
+        app:icon="@android:drawable/arrow_up_float"
+        app:iconGravity="textStart"
+        app:iconPadding="0dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/top_bar" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_left"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginEnd="10dp"
+        app:cornerRadius="30dp"
+        app:backgroundTint="@color/dpad_color"
+        app:layout_constraintTop_toBottomOf="@id/btn_up"
+        app:layout_constraintEnd_toStartOf="@id/btn_up" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_right"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginStart="10dp"
+        app:cornerRadius="30dp"
+        app:backgroundTint="@color/dpad_color"
+        app:layout_constraintTop_toBottomOf="@id/btn_up"
+        app:layout_constraintStart_toEndOf="@id/btn_up" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_down"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        app:cornerRadius="30dp"
+        app:backgroundTint="@color/dpad_color"
+        app:icon="@android:drawable/arrow_down_float"
+        app:layout_constraintTop_toBottomOf="@id/btn_left"
+        app:layout_constraintStart_toStartOf="@id/btn_up" />
+
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_y"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="120dp"
+        android:text="Y"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:cornerRadius="32dp"
+        app:backgroundTint="@color/btn_y_yellow"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/top_bar" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_x"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginEnd="10dp"
+        android:text="X"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:cornerRadius="32dp"
+        app:backgroundTint="@color/btn_x_blue"
+        app:layout_constraintTop_toBottomOf="@id/btn_y"
+        app:layout_constraintEnd_toStartOf="@id/btn_y" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_b"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginStart="10dp"
+        android:text="B"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:cornerRadius="32dp"
+        app:backgroundTint="@color/btn_b_red"
+        app:layout_constraintTop_toBottomOf="@id/btn_y"
+        app:layout_constraintStart_toEndOf="@id/btn_y" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_a"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:text="A"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:cornerRadius="32dp"
+        app:backgroundTint="@color/btn_a_green"
+        app:layout_constraintTop_toBottomOf="@id/btn_x"
+        app:layout_constraintStart_toStartOf="@id/btn_y" />
+
+
+    <com.example.applicationmobile.JoystickView
+        android:id="@+id/joystickLeft"
+        android:layout_width="140dp"
+        android:layout_height="140dp"
+        android:layout_marginBottom="36dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/joystickRight"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toEndOf="@+id/btn_right"
+        tools:ignore="MissingClass" />
+
+    <com.example.applicationmobile.JoystickView
+        android:id="@+id/joystickRight"
+        android:layout_width="140dp"
+        android:layout_height="140dp"
+        android:layout_marginStart="40dp"
+        android:layout_marginBottom="36dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btn_x"
+        app:layout_constraintStart_toEndOf="@+id/joystickLeft"
+        tools:ignore="MissingClass" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

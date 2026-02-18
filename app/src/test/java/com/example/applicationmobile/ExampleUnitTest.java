@@ -1,4 +1,4 @@
-package com.example.manettetel;
+package com.example.applicationmobile;
 
 import org.junit.Test;
 
