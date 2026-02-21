@@ -21,7 +21,7 @@ public class ChoixClasseActivity extends AppCompatActivity {
 
     private void lancerManette(String nomClasse){
         android.widget.Toast.makeText(this, "Bouton cliqué : " + nomClasse, Toast.LENGTH_SHORT).show();
-        Intent intent = new Intent(ChoixClasseActivity.this, ManetteActivity.class);
+        Intent intent = new Intent(ChoixClasseActivity.this, CustomActivity.class);
         intent.putExtra("CLASSE_CHOISIE", nomClasse);
         startActivity(intent);
     }
