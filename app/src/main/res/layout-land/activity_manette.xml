@@ -3,9 +3,11 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root_manette"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_dark"
+    android:background="#1A1B26"
+    android:keepScreenOn="true"
     tools:ignore="MissingDefaultResource">
 
     <LinearLayout
@@ -17,25 +19,63 @@
         android:gravity="center_vertical"
         app:layout_constraintTop_toTopOf="parent">
 
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/indicator_color"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            app:cardCornerRadius="10dp"
+            app:cardBackgroundColor="#E74C3C"
+            android:layout_marginEnd="8dp"/>
+
         <TextView
-            android:id="@+id/text_classe_joueur"
+            android:id="@+id/text_player_info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="GUERRIER"
-            android:textColor="@color/white"
+            android:text="PSEUDO - GUERRIER"
+            android:textColor="#FFFFFF"
             android:textStyle="bold"
-            android:textSize="18sp"/>
+            android:textSize="16sp"/>
 
         <ProgressBar
+            android:id="@+id/health_bar"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="0dp"
-            android:layout_height="20dp"
+            android:layout_height="24dp"
             android:layout_weight="1"
-            android:layout_marginStart="32dp"
-            android:layout_marginEnd="32dp"
-            android:progress="80"
-            android:progressTint="@color/health_green"
-            android:progressBackgroundTint="@color/black" />
+            android:layout_marginStart="24dp"
+            android:layout_marginEnd="24dp"
+            android:progress="100"
+            android:progressTint="#52B766"
+            android:progressBackgroundTint="#000000" />
+
+        <ImageView
+            android:id="@+id/btn_settings"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="16dp"
+            android:padding="8dp"
+            android:src="@android:drawable/ic_menu_preferences"
+            app:tint="#FFFFFF"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_sos"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginEnd="16dp"
+            android:text="SOS"
+            android:textColor="#000000"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            app:cornerRadius="25dp"
+            app:backgroundTint="#F39C12"
+            android:insetLeft="0dp"
+            android:insetTop="0dp"
+            android:insetRight="0dp"
+            android:insetBottom="0dp"
+            android:padding="0dp"/>
 
         <ImageView
             android:id="@+id/btn_disconnect"
@@ -43,131 +83,121 @@
             android:layout_height="40dp"
             android:padding="8dp"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
+            app:tint="#E74C3C"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"/>
     </LinearLayout>
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_up"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:layout_marginStart="90dp"
-        android:layout_marginTop="30dp"
-        app:cornerRadius="30dp"
-        app:backgroundTint="@color/dpad_color"
-        app:icon="@android:drawable/arrow_up_float"
-        app:iconGravity="textStart"
-        app:iconPadding="0dp"
+    <com.example.applicationmobile.JoystickView
+        android:id="@+id/joystick_left"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_marginBottom="40dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/top_bar" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_left"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:layout_marginEnd="10dp"
-        app:cornerRadius="30dp"
-        app:backgroundTint="@color/dpad_color"
-        app:layout_constraintTop_toBottomOf="@id/btn_up"
-        app:layout_constraintEnd_toStartOf="@id/btn_up" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_right"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:layout_marginStart="10dp"
-        app:cornerRadius="30dp"
-        app:backgroundTint="@color/dpad_color"
-        app:layout_constraintTop_toBottomOf="@id/btn_up"
-        app:layout_constraintStart_toEndOf="@id/btn_up" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_down"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        app:cornerRadius="30dp"
-        app:backgroundTint="@color/dpad_color"
-        app:icon="@android:drawable/arrow_down_float"
-        app:layout_constraintTop_toBottomOf="@id/btn_left"
-        app:layout_constraintStart_toStartOf="@id/btn_up" />
-
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_y"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="120dp"
-        android:text="Y"
-        android:textColor="@color/black"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:cornerRadius="32dp"
-        app:backgroundTint="@color/btn_y_yellow"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/top_bar" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_x"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
-        android:layout_marginEnd="10dp"
-        android:text="X"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:cornerRadius="32dp"
-        app:backgroundTint="@color/btn_x_blue"
-        app:layout_constraintTop_toBottomOf="@id/btn_y"
-        app:layout_constraintEnd_toStartOf="@id/btn_y" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_b"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
-        android:layout_marginStart="10dp"
-        android:text="B"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:cornerRadius="32dp"
-        app:backgroundTint="@color/btn_b_red"
-        app:layout_constraintTop_toBottomOf="@id/btn_y"
-        app:layout_constraintStart_toEndOf="@id/btn_y" />
+        app:layout_constraintHorizontal_bias="0.05" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_a"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginBottom="28dp"
         android:text="A"
-        android:textColor="@color/black"
-        android:textSize="20sp"
+        android:textColor="#000000"
+        android:textSize="24sp"
         android:textStyle="bold"
-        app:cornerRadius="32dp"
-        app:backgroundTint="@color/btn_a_green"
-        app:layout_constraintTop_toBottomOf="@id/btn_x"
-        app:layout_constraintStart_toStartOf="@id/btn_y" />
-
-
-    <com.example.applicationmobile.JoystickView
-        android:id="@+id/joystickLeft"
-        android:layout_width="140dp"
-        android:layout_height="140dp"
-        android:layout_marginBottom="36dp"
+        app:backgroundTint="#A3BE8C"
+        app:cornerRadius="40dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/joystickRight"
-        app:layout_constraintHorizontal_chainStyle="packed"
-        app:layout_constraintStart_toEndOf="@+id/btn_right"
-        tools:ignore="MissingClass" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.826"
+        app:layout_constraintStart_toStartOf="parent" />
 
-    <com.example.applicationmobile.JoystickView
-        android:id="@+id/joystickRight"
-        android:layout_width="140dp"
-        android:layout_height="140dp"
-        android:layout_marginStart="40dp"
-        android:layout_marginBottom="36dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/btn_x"
-        app:layout_constraintStart_toEndOf="@+id/joystickLeft"
-        tools:ignore="MissingClass" />
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_y"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginBottom="76dp"
+        android:text="Y"
+        android:textColor="#000000"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:backgroundTint="#EBCB8B"
+        app:cornerRadius="40dp"
+        app:layout_constraintBottom_toTopOf="@+id/btn_a"
+        app:layout_constraintEnd_toEndOf="@+id/btn_a"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/btn_a" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_x"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginEnd="16dp"
+        android:text="X"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:backgroundTint="#81A1C1"
+        app:cornerRadius="40dp"
+        app:layout_constraintBottom_toBottomOf="@+id/btn_a"
+        app:layout_constraintEnd_toStartOf="@+id/btn_a"
+        app:layout_constraintTop_toTopOf="@+id/btn_y" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_b"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginStart="16dp"
+        android:text="B"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:backgroundTint="#BF616A"
+        app:cornerRadius="40dp"
+        app:layout_constraintBottom_toBottomOf="@+id/btn_a"
+        app:layout_constraintStart_toEndOf="@+id/btn_a"
+        app:layout_constraintTop_toTopOf="@+id/btn_y" />
+
+    <LinearLayout
+        android:id="@+id/panel_settings"
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#1A1B26"
+        android:padding="16dp"
+        android:visibility="gone"
+        android:elevation="10dp"
+        app:layout_constraintTop_toBottomOf="@+id/top_bar"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginEnd="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Taille des contrôles"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="8dp"/>
+
+        <SeekBar
+            android:id="@+id/seek_size"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="100"
+            android:progress="50"
+            android:progressTint="#52B766"
+            android:thumbTint="#FFFFFF"/>
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/switch_gaucher"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Mode Gaucher"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

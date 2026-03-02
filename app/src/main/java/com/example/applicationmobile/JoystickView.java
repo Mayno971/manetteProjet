@@ -16,6 +16,15 @@ public class JoystickView extends View {
     private float baseRadius, stickRadius;
     private float stickX, stickY;
 
+    public interface JoystickListener {
+        void onJoystickMoved(float xPercent, float yPercent);
+    }
+    private JoystickListener joystickCallBack;
+
+    public void setJoystickListener (JoystickListener listener) {
+        this.joystickCallBack = listener;
+    }
+
     // Constructeur indispensable pour l'utilisation dans un fichier XML
     public JoystickView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -82,6 +91,12 @@ public class JoystickView extends View {
 
         // Demande à Android de redessiner la vue avec les nouvelles coordonnées
         invalidate();
+
+        if (joystickCallBack != null) {
+            float xPercent = (stickX - centerX) / baseRadius;
+            float yPercent = -(stickY - centerY)/baseRadius;
+            joystickCallBack.onJoystickMoved(xPercent, yPercent);
+        }
         return true;
     }
 }
