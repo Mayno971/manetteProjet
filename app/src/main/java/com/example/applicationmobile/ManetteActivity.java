@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -16,10 +17,12 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.card.MaterialCardView;
 
-import io.socket.client.IO;
-import io.socket.client.Socket;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.URISyntaxException;
 
 import android.content.res.ColorStateList;
@@ -33,10 +36,12 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
+import java.util.ArrayDeque;
+import java.util.concurrent.ConcurrentLinkedDeque;
+
 
 
 public class ManetteActivity extends AppCompatActivity {
-    private Socket mSocket;
     private String pseudoJoueur;
     private String classeJoueur;
     private String couleurJoueur;
@@ -54,9 +59,18 @@ public class ManetteActivity extends AppCompatActivity {
     private long dernierTempsSecousse = 0; // Pour le Cooldown physique
     private long dernierEnvoiJoystick = 0;
 
-
+    // VARIABLES RESEAU (TCP)
+    private java.net.Socket tcpSocket;
+    private PrintWriter out;
+    private BufferedReader in;
+    private boolean  isNetworkRunning = false;
+    private ConcurrentLinkedDeque<String> messagesSortants = new ConcurrentLinkedDeque<>();
+    private String sessionToken;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // Recuperation du token
         android.content.SharedPreferences prefs = getSharedPreferences("ColossusPrefs", MODE_PRIVATE);
         String sessionToken = prefs.getString("SESSION_TOKEN", null);
 
@@ -64,9 +78,7 @@ public class ManetteActivity extends AppCompatActivity {
             sessionToken = java.util.UUID.randomUUID().toString();
             prefs.edit().putString("SESSION_TOKEN", sessionToken).apply();
         }
-        final String finalToken = sessionToken;
 
-        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manette);
 
         ImageView btnDisconnect = findViewById(R.id.btn_disconnect);
@@ -103,26 +115,9 @@ public class ManetteActivity extends AppCompatActivity {
         clignotementRouge.setRepeatMode(Animation.REVERSE);
         clignotementRouge.setRepeatCount(Animation.INFINITE);
 
-        android.widget.Button btnSos = findViewById(R.id.btn_sos);
+        Button btnSos = findViewById(R.id.btn_sos);
 
         initialiserReseau();
-        org.json.JSONObject data = new org.json.JSONObject();
-        try {
-            data.put("pseudo", pseudoJoueur);
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
-        try {
-            data.put("classe", classeJoueur);
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
-        try {
-            data.put("token", finalToken); // LA CLÉ MAGIQUE !
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
-        mSocket.emit("nouveau_joueur", data);
 
         btnDisconnect.setOnClickListener(v -> {
             Intent retourIntent = new Intent(ManetteActivity.this, ConnexionActivity.class);
@@ -254,7 +249,7 @@ public class ManetteActivity extends AppCompatActivity {
         });
 
         // MENU DES OPTIONS
-        android.widget.ImageView btnSettings = findViewById(R.id.btn_settings);
+        ImageView btnSettings = findViewById(R.id.btn_settings);
         android.view.View panelSettings = findViewById(R.id.panel_settings);
         android.widget.SeekBar seekSize = findViewById(R.id.seek_size);
 
@@ -366,73 +361,57 @@ public class ManetteActivity extends AppCompatActivity {
 
     private void declencherActionSecousse() {
         faireVibrer(300);
-
         if (classeJoueur.contains("SOIGNEUR")) {
-            android.widget.Toast.makeText(this, "RÉSURRECTION DE ZONE !!!", android.widget.Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "RÉSURRECTION DE ZONE !!!", Toast.LENGTH_SHORT).show();
             envoyerActionServeur("Secouer la bulle");
         } else {
-            android.widget.Toast.makeText(this, "T'as secoué la manette !", android.widget.Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "T'as secoué la manette !", Toast.LENGTH_SHORT).show();
             envoyerActionServeur("SECOUSSE_PHYSIQUE");
         }
     }
 
     private void initialiserReseau() {
-        try {
-            mSocket = IO.socket("http://10.0.2.2:3000");
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        mSocket.on(Socket.EVENT_CONNECT, args -> {
-           runOnUiThread(() -> {
-               android.widget.Toast.makeText(this, "Connecté à l'arène !", Toast.LENGTH_SHORT).show();
-           });
-           envoyerInfosJoueur();
-        });
-            mSocket.connect();
+        EnvoiThread threadReseau = new EnvoiThread("172.18.120.232", 7777);
+        threadReseau.start();
     }
 
-    private void envoyerInfosJoueur() {
-        if (mSocket == null || !mSocket.connected()) return;
+    private void envoyerInfosJoueur() {try {
+        JSONObject data = new JSONObject();
+        data.put("type", "nouveau_joueur");
+        data.put("pseudo", pseudoJoueur);
+        data.put("classe", classeJoueur);
+        data.put("couleur", couleurJoueur);
+        data.put("token", sessionToken);
 
-        try {
-            JSONObject data = new JSONObject();
-            data.put("pseudo", pseudoJoueur);
-            data.put("classe", classeJoueur);
-            data.put("couleur", couleurJoueur);
-
-            mSocket.emit("nouveau_joueur", data);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        messagesSortants.add(data.toString());
+    } catch (JSONException e) {
+        e.printStackTrace();
+    }
     }
 
     private void envoyerActionServeur(String typeAction) {
-        if (mSocket == null || !mSocket.connected()) return;
-
         try {
             JSONObject data = new JSONObject();
+            data.put("type", "action_joueur");
             data.put("pseudo", pseudoJoueur);
             data.put("action", typeAction);
 
-            mSocket.emit("action_joueur", data);
+            messagesSortants.add(data.toString());
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
 
     public void envoyerMouvementServeur(float x, float y) {
-        if (mSocket == null || !mSocket.connected()) return;
-
         try {
-            org.json.JSONObject data = new org.json.JSONObject();
+            JSONObject data = new JSONObject();
+            data.put("type", "mouvement_joueur");
             data.put("x", x);
             data.put("y", y);
+            data.put("token", sessionToken);
 
-            // On l'envoie dans le tuyau "mouvement_joueur" que l'on a codé dans Node.js
-            mSocket.emit("mouvement_joueur", data);
-        }  catch (org.json.JSONException e) {
+            messagesSortants.add(data.toString());
+        } catch (JSONException e) {
             e.printStackTrace();
         }
     }
@@ -440,9 +419,13 @@ public class ManetteActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mSocket != null) {
-            mSocket.disconnect();
-            mSocket.off(); // Arrête d'écouter
+        isNetworkRunning = false;
+        try {
+            if (out != null) out.close();
+            if (in != null) in.close();
+            if (tcpSocket != null && !tcpSocket.isClosed()) tcpSocket.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -517,6 +500,88 @@ public class ManetteActivity extends AppCompatActivity {
         // On coupe le capteur si l'appli est réduite
         if (sensorManager != null) {
             sensorManager.unregisterListener(ecouteurSecousse);
+        }
+    }
+
+    // Gère la réception d'information du serveur (ex: perte de vie)
+    private void traiterMessageServeur(String json) {
+        try {
+            JSONObject data = new JSONObject(json);
+            String type = data.getString("type");
+
+            if (type.equals("update_health")) {
+                int nouvelleVie = data.getInt("vie");
+                // Mettre à jour l'interface UI (toujours sur le thread principal)
+                runOnUiThread(() -> mettreAjourVie(nouvelleVie));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    class EnvoiThread extends Thread {
+        private String ipServeur;
+        private int portServeur;
+
+        public EnvoiThread(String ip, int port) {
+            this.ipServeur = ip;
+            this.portServeur = port;
+        }
+
+        @Override
+        public void run() {
+            try {
+                // 1. On ouvre la connexion UNE SEULE FOIS
+                tcpSocket = new java.net.Socket(ipServeur, portServeur);
+                out = new PrintWriter(tcpSocket.getOutputStream(), true);
+                in = new BufferedReader(new java.io.InputStreamReader(tcpSocket.getInputStream()));
+                isNetworkRunning = true;
+
+                Log.i("RESEAU", "Connecté au serveur Unity !");
+
+                // Met à jour l'interface
+                runOnUiThread(() -> {
+                    Toast.makeText(ManetteActivity.this, "Connecté à l'arène !", Toast.LENGTH_SHORT).show();
+                    envoyerInfosJoueur(); // Envoie les infos d'initialisation
+                });
+
+                // 2. SOUS-THREAD : Pour écouter les réponses du serveur (Ex: le boss nous frappe)
+                Thread ecouteThread = new Thread(() -> {
+                    try {
+                        String reponseServeur;
+                        // On écoute en boucle
+                        while (isNetworkRunning && (reponseServeur = in.readLine()) != null) {
+                            final String jsonReponse = reponseServeur;
+                            runOnUiThread(() -> traiterMessageServeur(jsonReponse));
+                        }
+                    } catch (java.io.IOException e) {
+                        Log.e("RESEAU", "Erreur de lecture : " + e.getMessage());
+                    }
+                });
+                ecouteThread.start();
+
+                // 3. BOUCLE PRINCIPALE : Envoi des actions de la manette
+                while (isNetworkRunning) {
+                    String messageAEnvoyer = messagesSortants.poll();
+
+                    if (messageAEnvoyer != null) {
+                        out.println(messageAEnvoyer); // Envoi au serveur !
+                        // Log.i("RESEAU", "Commande envoyée : " + messageAEnvoyer); // ATTENTION: Ça va spammer ta console avec le Joystick
+                    }
+                    // Pause de 10ms pour ne pas faire exploser le processeur du téléphone
+                    Thread.sleep(10);
+                }
+
+                // 4. Fermeture propre quand on quitte l'application
+                in.close();
+                out.close();
+                tcpSocket.close();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.e("RESEAU", "Erreur globale : " + e.getMessage());
+                runOnUiThread(() -> Toast.makeText(ManetteActivity.this, "Impossible de joindre l'arène", Toast.LENGTH_SHORT).show());
+            }
         }
     }
 }
