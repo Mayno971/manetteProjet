@@ -4,51 +4,59 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_dark">
-
-    <TextView
-        android:id="@+id/textView_stateConnexion"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Déconnecté"
-        android:textColor="#FAFAFA"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:layout_editor_absoluteY="18dp" />
-
-    <TextView
-        android:id="@+id/textView_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="sans-serif-medium"
-        android:text="TUTORIEL : GUERRIER"
-        android:textColor="#FBFBFB"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:layout_editor_absoluteY="49dp" />
+    android:background="#121212">
 
 
     <LinearLayout
-        android:id="@+id/linearLayout"
+        android:id="@+id/header_layout"
         android:layout_width="match_parent"
-        android:layout_height="250dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/textView_stateConnexion"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Statut : Déconnecté"
+            android:textColor="#E74C3C"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/textView_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="sans-serif-medium"
+            android:text="TUTORIEL : GUERRIER"
+            android:textColor="#FBFBFB"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout_actions"
+        android:layout_width="match_parent"
+        android:layout_height="280dp"
         android:orientation="horizontal"
         android:padding="8dp"
         android:weightSum="4"
-        app:layout_constraintBottom_toTopOf="@+id/button_retour"
-        app:layout_constraintTop_toBottomOf="@+id/textView_title"
-        tools:layout_editor_absoluteX="-16dp">
+        app:layout_constraintBottom_toTopOf="@+id/layout_buttons"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/header_layout">
 
         <androidx.cardview.widget.CardView
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_margin="4dp"
             android:layout_weight="1"
-            android:backgroundTint="#1A1B26"
+            app:cardBackgroundColor="#1A1B26"
             app:cardCornerRadius="8dp"
             app:cardElevation="4dp">
 
@@ -58,7 +66,7 @@
                 android:layout_gravity="top|center_horizontal"
                 android:layout_marginTop="5dp"
                 app:cardBackgroundColor="#FFEB3B"
-                app:cardCornerRadius="20dp"
+                app:cardCornerRadius="15dp"
                 app:cardElevation="0dp">
 
                 <TextView
@@ -68,32 +76,29 @@
                     android:gravity="center"
                     android:text="Y"
                     android:textColor="#000000"
-                    android:textSize="20sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
-
             </androidx.cardview.widget.CardView>
 
             <ImageView
-                android:id="@+id/imageView_action1"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
+                android:id="@+id/imageView_action_Y"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:layout_gravity="center"
-                android:layout_marginBottom="20dp"
-                android:src="@drawable/baseline_flash_on_24"
                 android:scaleType="centerInside"
-                android:contentDescription="Icône de l'action" />
+                android:src="@drawable/baseline_flash_on_24" />
 
             <TextView
                 android:id="@+id/textView_desc_Y"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom|center_horizontal"
-                android:layout_marginBottom="0dp"
-                android:text="Se projeter vers le soigneur"
+                android:layout_marginBottom="8dp"
+                android:paddingHorizontal="4dp"
+                android:text="Saut"
                 android:textAlignment="center"
                 android:textColor="#FFFFFF"
-                android:textSize="12sp" />
-
+                android:textSize="11sp" />
         </androidx.cardview.widget.CardView>
 
         <androidx.cardview.widget.CardView
@@ -101,7 +106,7 @@
             android:layout_height="match_parent"
             android:layout_margin="4dp"
             android:layout_weight="1"
-            android:backgroundTint="#1A1B26"
+            app:cardBackgroundColor="#1A1B26"
             app:cardCornerRadius="8dp"
             app:cardElevation="4dp">
 
@@ -111,7 +116,7 @@
                 android:layout_gravity="top|center_horizontal"
                 android:layout_marginTop="5dp"
                 app:cardBackgroundColor="#2196F3"
-                app:cardCornerRadius="20dp"
+                app:cardCornerRadius="15dp"
                 app:cardElevation="0dp">
 
                 <TextView
@@ -120,10 +125,9 @@
                     android:layout_height="match_parent"
                     android:gravity="center"
                     android:text="X"
-                    android:textColor="#F6F6F6"
-                    android:textSize="20sp"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
-
             </androidx.cardview.widget.CardView>
 
             <TextView
@@ -131,12 +135,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom|center_horizontal"
-                android:layout_marginBottom="0dp"
-                android:text="Compétence Spéciale"
+                android:layout_marginBottom="8dp"
+                android:paddingHorizontal="4dp"
+                android:text="Compétence"
                 android:textAlignment="center"
                 android:textColor="#FFFFFF"
-                android:textSize="12sp"/>
-
+                android:textSize="11sp" />
         </androidx.cardview.widget.CardView>
 
         <androidx.cardview.widget.CardView
@@ -144,7 +148,7 @@
             android:layout_height="match_parent"
             android:layout_margin="4dp"
             android:layout_weight="1"
-            android:backgroundTint="#1A1B26"
+            app:cardBackgroundColor="#1A1B26"
             app:cardCornerRadius="8dp"
             app:cardElevation="4dp">
 
@@ -154,7 +158,7 @@
                 android:layout_gravity="top|center_horizontal"
                 android:layout_marginTop="5dp"
                 app:cardBackgroundColor="#F44336"
-                app:cardCornerRadius="20dp"
+                app:cardCornerRadius="15dp"
                 app:cardElevation="0dp">
 
                 <TextView
@@ -163,10 +167,9 @@
                     android:layout_height="match_parent"
                     android:gravity="center"
                     android:text="B"
-                    android:textColor="#F4F4F4"
-                    android:textSize="20sp"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
-
             </androidx.cardview.widget.CardView>
 
             <TextView
@@ -174,12 +177,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom|center_horizontal"
-                android:layout_marginBottom="0dp"
+                android:layout_marginBottom="8dp"
+                android:paddingHorizontal="4dp"
                 android:text="Esquive"
                 android:textAlignment="center"
                 android:textColor="#FFFFFF"
-                android:textSize="12sp"/>
-
+                android:textSize="11sp" />
         </androidx.cardview.widget.CardView>
 
         <androidx.cardview.widget.CardView
@@ -187,7 +190,7 @@
             android:layout_height="match_parent"
             android:layout_margin="4dp"
             android:layout_weight="1"
-            android:backgroundTint="#1A1B26"
+            app:cardBackgroundColor="#1A1B26"
             app:cardCornerRadius="8dp"
             app:cardElevation="4dp">
 
@@ -197,7 +200,7 @@
                 android:layout_gravity="top|center_horizontal"
                 android:layout_marginTop="5dp"
                 app:cardBackgroundColor="#4CAF50"
-                app:cardCornerRadius="20dp"
+                app:cardCornerRadius="15dp"
                 app:cardElevation="0dp">
 
                 <TextView
@@ -207,54 +210,61 @@
                     android:gravity="center"
                     android:text="A"
                     android:textColor="#000000"
-                    android:textSize="20sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
-
             </androidx.cardview.widget.CardView>
 
             <ImageView
-                android:id="@+id/imageView_action"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
+                android:id="@+id/imageView_action_A"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:layout_gravity="center"
-                android:layout_marginBottom="20dp"
-                android:src="@drawable/icone_attaque"
                 android:scaleType="centerInside"
-                android:contentDescription="Icône de l'action" />
+                android:src="@drawable/icone_attaque" />
 
             <TextView
                 android:id="@+id/textView_desc_A"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom|center_horizontal"
-                android:layout_marginBottom="0dp"
-                android:text="Attaque de base"
+                android:layout_marginBottom="8dp"
+                android:paddingHorizontal="4dp"
+                android:text="Attaque"
                 android:textAlignment="center"
                 android:textColor="#FFFFFF"
-                android:textSize="12sp"/>
-
+                android:textSize="11sp" />
         </androidx.cardview.widget.CardView>
 
     </LinearLayout>
 
-    <Button
-        android:id="@+id/button_valider"
-        android:layout_width="175dp"
-        android:layout_height="45dp"
-        android:layout_marginStart="8dp"
-        android:backgroundTint="#4AA240"
-        android:text="VALIDER"
-        app:layout_constraintStart_toEndOf="@+id/button_retour"
-        tools:layout_editor_absoluteY="342dp" />
 
-    <Button
-        android:id="@+id/button_retour"
-        android:layout_width="175dp"
-        android:layout_height="45dp"
-        android:layout_marginBottom="24dp"
-        android:backgroundTint="#9D9C9C"
-        android:text="RETOUR"
+    <LinearLayout
+        android:id="@+id/layout_buttons"
+        android:layout_width="754dp"
+        android:layout_height="40dp"
+        android:layout_marginBottom="4dp"
+        android:gravity="center"
+        android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
-        tools:layout_editor_absoluteX="207dp" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <Button
+            android:id="@+id/button_retour"
+            android:layout_width="161dp"
+            android:layout_height="55dp"
+            android:layout_marginEnd="8dp"
+            android:backgroundTint="#9D9C9C"
+            android:text="RETOUR" />
+
+        <Button
+            android:id="@+id/button_valider"
+            android:layout_width="160dp"
+            android:layout_height="55dp"
+            android:layout_marginStart="8dp"
+            android:backgroundTint="#4AA240"
+            android:text="VALIDER" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
