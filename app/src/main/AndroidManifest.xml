@@ -44,6 +44,9 @@
             android:screenOrientation="sensorLandscape"
             android:exported="false" />
 
+        <activity android:name=".LobbyActivity"
+            android:exported="false" />
+
         <activity
             android:name=".ManetteActivity"
             android:screenOrientation="sensorLandscape"
