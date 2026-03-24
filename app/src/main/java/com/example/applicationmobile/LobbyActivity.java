@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,6 +19,12 @@ public class LobbyActivity extends AppCompatActivity {
     private TextView stateConnexion;
     private Button btnValider;
     private Button btnRetour;
+
+    private ImageView imgA;
+    private ImageView imgB;
+    private ImageView imgX;
+    private ImageView imgY;
+
 
     private TextView descA;
     private TextView descB;
@@ -42,6 +49,11 @@ public class LobbyActivity extends AppCompatActivity {
         descX = findViewById(R.id.textView_desc_X);
         descY = findViewById(R.id.textView_desc_Y);
 
+        imgA = findViewById(R.id.imageView_action_A);
+        imgB = findViewById(R.id.imageView_action_B);
+        imgX = findViewById(R.id.imageView_action_X);
+        imgY = findViewById(R.id.imageView_action_Y);
+
         btnValider = findViewById(R.id.button_valider);
         btnRetour = findViewById(R.id.button_retour);
 
@@ -51,6 +63,7 @@ public class LobbyActivity extends AppCompatActivity {
         couleurJoueur = intent.getStringExtra("COULEUR_JOUEUR");
 
         estConnecte = intent.getBooleanExtra("CONNECTE", true);
+
         if (classeJoueur == null) classeJoueur = "GUERRIER";
 
        title.setText("TUTORIEL : " + classeJoueur.toUpperCase());
@@ -93,15 +106,17 @@ public class LobbyActivity extends AppCompatActivity {
         switch (classeJoueur.toUpperCase()) {
             case "GUERRIER" :
                 descA.setText("Coup d'épée");
+                imgA.setImageResource(R.drawable.logo);
+
                 descB.setText("Non assigné");
                 descX.setText("Non assigné");
                 descY.setText("Aller au healer");
                 break;
             case "MAGE" :
-                descA.setText("Coup");
-                descB.setText(" ");
-                descX.setText(" ");
-                descY.setText(" ");
+                descA.setText("Boule de feu");
+                descB.setText("Cube Magique");
+                descX.setText("Non Assigné");
+                descY.setText("Se projeter vers le soigneur");
                 break;
             case "SOIGNEUR" :
                 descA.setText("Boule de vie");

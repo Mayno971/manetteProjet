@@ -159,45 +159,6 @@
         app:layout_constraintStart_toEndOf="@+id/btn_a"
         app:layout_constraintTop_toTopOf="@+id/btn_y" />
 
-    <LinearLayout
-        android:id="@+id/panel_settings"
-        android:layout_width="250dp"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="#1A1B26"
-        android:padding="16dp"
-        android:visibility="gone"
-        android:elevation="10dp"
-        app:layout_constraintTop_toBottomOf="@+id/top_bar"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginEnd="16dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Taille des contrôles"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="8dp"/>
-
-        <SeekBar
-            android:id="@+id/seek_size"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:max="100"
-            android:progress="50"
-            android:progressTint="#52B766"
-            android:thumbTint="#FFFFFF"/>
-
-        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/switch_gaucher"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Mode Gaucher"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold" />
-    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

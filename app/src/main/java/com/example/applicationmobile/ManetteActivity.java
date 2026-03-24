@@ -50,6 +50,13 @@ public class ManetteActivity extends AppCompatActivity {
     private AlphaAnimation clignotementRouge;
     private int vieActuelle = 100;
 
+    // Variables globales pour les paramètres
+    private boolean estEnModeGaucher = false;
+    private boolean vibrationsActives = true;
+    private int memoireTaille = 50;
+    private int memoireOpacite = 100;
+
+
     // --- VARIABLES POUR LA DÉTECTION DE SECOUSSE (SHAKE) ---
     private SensorManager sensorManager;
     private Sensor accelerometer;
@@ -250,37 +257,66 @@ public class ManetteActivity extends AppCompatActivity {
 
         // MENU DES OPTIONS
         ImageView btnSettings = findViewById(R.id.btn_settings);
-        android.view.View panelSettings = findViewById(R.id.panel_settings);
-        android.widget.SeekBar seekSize = findViewById(R.id.seek_size);
 
         btnSettings.setOnClickListener(v -> {
-            if (panelSettings.getVisibility() == android.view.View.VISIBLE) {
-                panelSettings.setVisibility(android.view.View.GONE);
-            } else {
-                panelSettings.setVisibility(android.view.View.VISIBLE);
-            }
-        });
+            ParametreFragment fragment = new ParametreFragment();
 
-        seekSize.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(android.widget.SeekBar seekBar, int progress, boolean fromUser) {
-                float echelle = 0.6f + (progress / 100f) * 0.8f;
+            fragment.setEtatsInitiaux(estEnModeGaucher, vibrationsActives, memoireTaille, memoireOpacite);
 
-                // On applique cette taille à tous les boutons !
-                btnA.setScaleX(echelle); btnA.setScaleY(echelle);
-                btnB.setScaleX(echelle); btnB.setScaleY(echelle);
-                btnX.setScaleX(echelle); btnX.setScaleY(echelle);
-                btnY.setScaleX(echelle); btnY.setScaleY(echelle);
+            // On écoute ce que le fragment nous dit de faire
+            fragment.setListener(new ParametreFragment.ParametresListener() {
+                @Override
+                public void onTailleBoutonsChangee(float echelle) {
+                    btnA.setScaleX(echelle); btnA.setScaleY(echelle);
+                    btnB.setScaleX(echelle); btnB.setScaleY(echelle);
+                    btnX.setScaleX(echelle); btnX.setScaleY(echelle);
+                    btnY.setScaleX(echelle); btnY.setScaleY(echelle);
+                    joystickLeft.setScaleX(echelle); joystickLeft.setScaleY(echelle);
+                }
 
-                // Et même au Joystick pour les gros pouces !
-                joystickLeft.setScaleX(echelle);
-                joystickLeft.setScaleY(echelle);
-            }
+                @Override
+                public void onOpaciteChangee(float alpha) {
+                    memoireOpacite = (int) (alpha * 100); // Sauvegarde
+                    // La méthode setAlpha gère la transparence d'un élément (1 = plein, 0.5 = à moitié invisible)
+                    btnA.setAlpha(alpha);
+                    btnB.setAlpha(alpha);
+                    btnX.setAlpha(alpha);
+                    btnY.setAlpha(alpha);
+                    joystickLeft.setAlpha(alpha);
+                }
 
-            @Override
-            public void onStartTrackingTouch(android.widget.SeekBar seekBar) {} // Inutile ici
-            @Override
-            public void onStopTrackingTouch(android.widget.SeekBar seekBar) {} // Inutile ici
+                @Override
+                public void onModeGaucherChange(boolean isGaucher) {
+                    estEnModeGaucher = isGaucher; // On sauvegarde le choix
+
+                    androidx.constraintlayout.widget.ConstraintLayout rootManette = findViewById(R.id.root_manette);
+                    androidx.constraintlayout.widget.ConstraintSet set = new androidx.constraintlayout.widget.ConstraintSet();
+                    set.clone(rootManette);
+
+                    if (isGaucher) {
+                        // MODE GAUCHER ACTIVÉ
+                        set.setHorizontalBias(R.id.joystick_left, 0.95f);
+                        set.setHorizontalBias(R.id.btn_a, 0.20f);
+                        // N'oublie pas d'inverser aussi les autres boutons (B, X, Y) si besoin !
+                    } else {
+                        // MODE DROITIER (Classique)
+                        set.setHorizontalBias(R.id.joystick_left, 0.05f);
+                        set.setHorizontalBias(R.id.btn_a, 0.95f);
+                    }
+
+                    android.transition.TransitionManager.beginDelayedTransition(rootManette);
+                    set.applyTo(rootManette);
+                }
+
+                @Override
+                public void onVibrationsChange(boolean isVibrationActive) {
+                    vibrationsActives = isVibrationActive;
+                    // Astuce : il faudra juste englober ton code de vibration actuel d'un "if (vibrationsActives) { faireVibrer(); }"
+                }
+            });
+
+            // On affiche le fragment !
+            fragment.show(getSupportFragmentManager(), "Parametres");
         });
 
         // ========================
@@ -295,37 +331,7 @@ public class ManetteActivity extends AppCompatActivity {
         accPrecedente = SensorManager.GRAVITY_EARTH;
         secousse = 0.00f;
 
-        // ========================================================
-        // MODE GAUCHER (Inversion de l'interface)
-        // ========================================================
         androidx.constraintlayout.widget.ConstraintLayout rootManette = findViewById(R.id.root_manette);
-        com.google.android.material.materialswitch.MaterialSwitch switchGaucher = findViewById(R.id.switch_gaucher);
-
-        switchGaucher.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            androidx.constraintlayout.widget.ConstraintSet set = new androidx.constraintlayout.widget.ConstraintSet();
-            set.clone(rootManette); // On "photographie" l'interface actuelle
-
-            if (isChecked) {
-                // MODE GAUCHER ACTIVÉ
-                // On pousse le Joystick à 95% vers la droite
-                set.setHorizontalBias(R.id.joystick_left, 0.95f);
-                // On pousse le Bouton A vers la gauche.
-                // (On met 0.20f au lieu de 0.05f pour laisser la place au bouton X de s'afficher sans sortir de l'écran)
-                set.setHorizontalBias(R.id.btn_a, 0.20f);
-            } else {
-                // MODE DROITIER (Classique)
-                // On remet le Joystick à 5% à gauche
-                set.setHorizontalBias(R.id.joystick_left, 0.05f);
-                // On remet le Bouton A à 95% à droite
-                set.setHorizontalBias(R.id.btn_a, 0.95f);
-            }
-
-            // La ligne magique : Android va créer une animation fluide pour le déplacement !
-            android.transition.TransitionManager.beginDelayedTransition(rootManette);
-
-            // On applique les modifications
-            set.applyTo(rootManette);
-        });
 
     }
 
