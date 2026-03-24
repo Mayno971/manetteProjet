@@ -3,8 +3,6 @@ package com.example.applicationmobile;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -21,6 +19,11 @@ public class LobbyActivity extends AppCompatActivity {
     private Button btnValider;
     private Button btnRetour;
 
+    private TextView descA;
+    private TextView descB;
+    private TextView descX;
+    private TextView descY;
+
     private String pseudoJoueur;
     private String classeJoueur;
     private String couleurJoueur;
@@ -34,6 +37,11 @@ public class LobbyActivity extends AppCompatActivity {
 
         title = findViewById(R.id.textView_title);
         stateConnexion = findViewById(R.id.textView_stateConnexion);
+        descA = findViewById(R.id.textView_desc_A);
+        descB = findViewById(R.id.textView_desc_B);
+        descX = findViewById(R.id.textView_desc_X);
+        descY = findViewById(R.id.textView_desc_Y);
+
         btnValider = findViewById(R.id.button_valider);
         btnRetour = findViewById(R.id.button_retour);
 
@@ -43,7 +51,7 @@ public class LobbyActivity extends AppCompatActivity {
         couleurJoueur = intent.getStringExtra("COULEUR_JOUEUR");
 
         estConnecte = intent.getBooleanExtra("CONNECTE", true);
-        if (classeJoueur == null) classeJoueur = "GUERRIER"; // Sécurité
+        if (classeJoueur == null) classeJoueur = "GUERRIER";
 
        title.setText("TUTORIEL : " + classeJoueur.toUpperCase());
 
@@ -55,9 +63,11 @@ public class LobbyActivity extends AppCompatActivity {
         } else {
             stateConnexion.setText("Statut : Déconnecté");
             stateConnexion.setTextColor(Color.parseColor("#E74C3C")); // Rouge
-            btnValider.setEnabled(false); // On bloque le bouton
+            btnValider.setEnabled(false);
             btnValider.setAlpha(0.5f);
         }
+
+        mettreAjourTutoriel();
 
         btnValider.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -71,6 +81,47 @@ public class LobbyActivity extends AppCompatActivity {
                 finish();
             }
         });
+
+        btnRetour.setOnClickListener(v -> {
+            Intent goRetour = new Intent(LobbyActivity.this, ChoixClasseActivity.class);
+            startActivity(goRetour);
+            finish();
+        });
+    }
+
+    private void mettreAjourTutoriel(){
+        switch (classeJoueur.toUpperCase()) {
+            case "GUERRIER" :
+                descA.setText("Coup d'épée");
+                descB.setText("Non assigné");
+                descX.setText("Non assigné");
+                descY.setText("Aller au healer");
+                break;
+            case "MAGE" :
+                descA.setText("Coup");
+                descB.setText(" ");
+                descX.setText(" ");
+                descY.setText(" ");
+                break;
+            case "SOIGNEUR" :
+                descA.setText("Boule de vie");
+                descB.setText("Zone de soin");
+                descX.setText("Non assigné");
+                descY.setText("Aller au Healer");
+                break;
+            case "TANK" :
+                descA.setText("Bouclier");
+                descB.setText("Attraper");
+                descX.setText("Non assigné");
+                descY.setText("Aller au healer");
+                break;
+            default:
+                descA.setText("Coup");
+                descB.setText("Esquive");
+                descX.setText("Compétence");
+                descY.setText("Ultime");
+                break;
+        }
     }
 
 }

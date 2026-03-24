@@ -56,7 +56,7 @@ public class CustomActivity extends AppCompatActivity {
                 pseudoJoueur = "Joueur inconnu";
             }
 
-            Intent intent = new Intent(CustomActivity.this, ManetteActivity.class);
+            Intent intent = new Intent(CustomActivity.this, LobbyActivity.class);
             intent.putExtra("CLASSE_CHOISIE", classeChoisie);
             intent.putExtra("PSEUDO_JOUEUR", pseudoJoueur);
             intent.putExtra("COULEUR_JOUEUR", couleurChoisie);
