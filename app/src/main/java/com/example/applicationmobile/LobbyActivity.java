@@ -68,7 +68,7 @@ public class LobbyActivity extends AppCompatActivity {
                 goManette.putExtra("CLASSE_CHOISIE", classeJoueur);
                 goManette.putExtra("COULEUR_JOUEUR", couleurJoueur);
                 startActivity(goManette);
-                finish(); // On ferme cet écran d'attente pour ne pas y revenir en faisant "Retour"
+                finish();
             }
         });
     }
