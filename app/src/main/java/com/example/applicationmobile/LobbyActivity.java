@@ -109,11 +109,18 @@ public class LobbyActivity extends AppCompatActivity {
                 imgA.setImageResource(R.drawable.logo);
 
                 descB.setText("Non assigné");
+                imgB.setImageResource(R.drawable.baseline_pending_actions_24);
+
                 descX.setText("Non assigné");
+                imgX.setImageResource(R.drawable.baseline_pending_actions_24);
+
                 descY.setText("Aller au healer");
+                imgY.setImageResource(R.drawable.baseline_pending_actions_24);
                 break;
             case "MAGE" :
                 descA.setText("Boule de feu");
+                imgA.setImageResource(R.drawable.logo);
+
                 descB.setText("Cube Magique");
                 descX.setText("Non Assigné");
                 descY.setText("Se projeter vers le soigneur");

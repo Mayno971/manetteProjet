@@ -7,6 +7,8 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.util.Log;
@@ -56,7 +58,9 @@ public class ManetteActivity extends AppCompatActivity {
     private int memoireTaille = 50;
     private int memoireOpacite = 100;
 
-
+    private androidx.cardview.widget.CardView cardNotification;
+    private TextView textNotification;
+    private Handler notificationHandler = new Handler(Looper.getMainLooper());
     // --- VARIABLES POUR LA DÉTECTION DE SECOUSSE (SHAKE) ---
     private SensorManager sensorManager;
     private Sensor accelerometer;
@@ -89,6 +93,9 @@ public class ManetteActivity extends AppCompatActivity {
         setContentView(R.layout.activity_manette);
 
         ImageView btnDisconnect = findViewById(R.id.btn_disconnect);
+
+        cardNotification = findViewById(R.id.card_notification);
+        textNotification = findViewById(R.id.text_notification);
 
         Intent intent = getIntent();
         pseudoJoueur = intent.getStringExtra("PSEUDO_JOUEUR");
@@ -523,6 +530,44 @@ public class ManetteActivity extends AppCompatActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    public void afficherNotification(String message, String typeAlerte) {
+        // 1. On met à jour le texte sur le thread principal (UI Thread)
+        runOnUiThread(() -> {
+            textNotification.setText(message);
+
+            // 2. On change la couleur du texte selon l'urgence
+            switch (typeAlerte.toUpperCase()) {
+                case "MORT":
+                    textNotification.setTextColor(android.graphics.Color.parseColor("#E74C3C")); // Rouge
+                    faireVibrer(300); // Grosse vibration pour alerter le joueur
+                    break;
+                case "SOIN":
+                    textNotification.setTextColor(android.graphics.Color.parseColor("#52B766")); // Vert
+                    break;
+                default:
+                    textNotification.setTextColor(android.graphics.Color.parseColor("#F1C40F")); // Jaune
+                    break;
+            }
+
+            // 3. Animation d'apparition (Fade In)
+            cardNotification.setVisibility(android.view.View.VISIBLE);
+            cardNotification.setAlpha(0f);
+            cardNotification.animate().alpha(1f).setDuration(300).start();
+
+            // 4. On annule les anciennes disparitions si plusieurs alertes s'enchaînent
+            notificationHandler.removeCallbacksAndMessages(null);
+
+            // 5. On programme la disparition après 3 secondes (Fade Out)
+            notificationHandler.postDelayed(() -> {
+                cardNotification.animate()
+                        .alpha(0f)
+                        .setDuration(300)
+                        .withEndAction(() -> cardNotification.setVisibility(android.view.View.GONE))
+                        .start();
+            }, 3000);
+        });
     }
 
     class EnvoiThread extends Thread {
