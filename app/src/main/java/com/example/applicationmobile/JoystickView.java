@@ -34,13 +34,13 @@ public class JoystickView extends View {
     private void init() {
         // Couleur de la base du joystick (le grand cercle fixe)
         basePaint = new Paint();
-        basePaint.setColor(Color.parseColor("#24283B")); // Gris-bleu foncé
+        basePaint.setColor(Color.parseColor("#24283B"));
         basePaint.setStyle(Paint.Style.FILL);
         basePaint.setAntiAlias(true);
 
         // Couleur du "stick" (le petit cercle qui bouge)
         stickPaint = new Paint();
-        stickPaint.setColor(Color.parseColor("#414868")); // Gris-bleu plus clair
+        stickPaint.setColor(Color.parseColor("#414868"));
         stickPaint.setStyle(Paint.Style.FILL);
         stickPaint.setAntiAlias(true);
     }

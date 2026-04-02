@@ -124,6 +124,7 @@ public class LobbyActivity extends AppCompatActivity {
                 descB.setText("Cube Magique");
                 descX.setText("Non Assigné");
                 descY.setText("Se projeter vers le soigneur");
+                imgY.setImageResource(R.drawable.baseline_pending_actions_24);
                 break;
             case "SOIGNEUR" :
                 descA.setText("Boule de vie");

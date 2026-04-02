@@ -109,18 +109,6 @@ public class ManetteActivity extends AppCompatActivity {
         if (couleurJoueur == null) couleurJoueur = "#FFFFFF";
 
         TextView textPlayerInfo = findViewById(R.id.text_player_info);
-        com.google.android.material.card.MaterialCardView indicatorColor = findViewById(R.id.indicator_color);
-
-        textPlayerInfo.setText(pseudoJoueur.toUpperCase() + " - " + classeJoueur);
-        try {
-            if (couleurJoueur != null && couleurJoueur.startsWith("#")) {
-                indicatorColor.setCardBackgroundColor(android.graphics.Color.parseColor(couleurJoueur));
-            } else {
-                indicatorColor.setCardBackgroundColor(android.graphics.Color.parseColor("#FFFFFF"));
-            }
-        } catch (IllegalArgumentException e) {
-            indicatorColor.setCardBackgroundColor(android.graphics.Color.parseColor("#FFFFFF"));
-        }
 
         healthBar = findViewById(R.id.health_bar);
 
@@ -454,16 +442,22 @@ public class ManetteActivity extends AppCompatActivity {
     }
 
     private  void lancerCooldown(final android.widget.Button bouton, int tempsEnSecondes) {
-        final CharSequence texteOriginal = bouton.getText();
+        final String texteOriginal = bouton.getText().toString();
 
         bouton.setEnabled(false);
         bouton.setAlpha(0.5f);
+        long dureeTotale = (tempsEnSecondes * 1000L) + 500;
 
-        new android.os.CountDownTimer(tempsEnSecondes * 1000L, 1000){
+        new android.os.CountDownTimer(dureeTotale, 1000){
             @Override
-            public void onTick(long millisUntilFinished){
-                int secondesRestantes = (int) (millisUntilFinished / 1000) + 1;
-                bouton.setText(String.valueOf(secondesRestantes));
+            public void onTick(long millisUntilFinished) {
+                // On divise par 1000 pour avoir les secondes réelles
+                int secondesRestantes = (int) (millisUntilFinished / 1000);
+
+                // On affiche le chiffre seulement s'il est supérieur à 0
+                if (secondesRestantes > 0) {
+                    bouton.setText(String.valueOf(secondesRestantes));
+                }
             }
 
             @Override
@@ -476,22 +470,29 @@ public class ManetteActivity extends AppCompatActivity {
     }
 
     private void mettreAjourVie(int nouvelleVie) {
+        // On contraint la vie entre 0 et 100
         vieActuelle = Math.max(0, Math.min(100, nouvelleVie));
         healthBar.setProgress(vieActuelle);
 
-        if (vieActuelle <= 20 && vieActuelle > 0) {
+        if (vieActuelle > 50) {// VERT (51 à 100)
+            healthBar.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#52B766")));
+            healthBar.clearAnimation();
+
+        } else if (vieActuelle > 20) { // ORANGE (21 à 50)
+            healthBar.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#F39C12")));
+            healthBar.clearAnimation();
+
+        } else if (vieActuelle > 0) { // ROUGE  (1 à 20)
             healthBar.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#E74C3C")));
 
+            // On ne lance l'animation que si elle n'est pas déjà en cours
             if (healthBar.getAnimation() == null) {
                 healthBar.startAnimation(clignotementRouge);
                 faireVibrer(500);
             }
-        } else if (vieActuelle > 20) {
-            healthBar.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#52B766")));
-            healthBar.clearAnimation();
-        }
 
-        if (vieActuelle == 0) {
+        } else {
+            //  MORT (0)
             healthBar.clearAnimation();
             healthBar.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#000000")));
             android.widget.Toast.makeText(this, "GAME OVER", Toast.LENGTH_LONG).show();
