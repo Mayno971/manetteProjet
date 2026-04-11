@@ -75,6 +75,7 @@
         android:layout_width="200dp"
         android:layout_height="60dp"
         android:text="VALIDER"
+        android:textColor="@color/white"
         android:textSize="18sp"
         android:textStyle="bold"
         app:backgroundTint="@color/btn_blue"

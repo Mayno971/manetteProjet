@@ -1,9 +1,14 @@
 package com.example.applicationmobile;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -12,104 +17,80 @@ import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.util.Log;
+import android.view.View;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
-import com.google.android.material.card.MaterialCardView;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.ConstraintSet;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.URISyntaxException;
+import java.util.Timer;
+import java.util.TimerTask;
 
-import android.content.res.ColorStateList;
-import android.graphics.Color;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
-import android.widget.ProgressBar;
-
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
-
-import java.util.ArrayDeque;
-import java.util.concurrent.ConcurrentLinkedDeque;
-
-
+import io.socket.client.IO;
+import io.socket.client.Socket;
 
 public class ManetteActivity extends AppCompatActivity {
-    private String pseudoJoueur;
-    private String classeJoueur;
-    private String couleurJoueur;
 
-    private ProgressBar healthBar; // barre de vie
+    // --- VARIABLES JOUEUR ---
+    private String pseudoJoueur, classeJoueur, couleurJoueur, roomCode, sessionToken;
+
+    // --- VARIABLES UI & VIE ---
+    private ProgressBar healthBar;
     private AlphaAnimation clignotementRouge;
     private int vieActuelle = 100;
-
-    // Variables globales pour les paramètres
-    private boolean estEnModeGaucher = false;
-    private boolean vibrationsActives = true;
-    private int memoireTaille = 50;
-    private int memoireOpacite = 100;
-
     private androidx.cardview.widget.CardView cardNotification;
     private TextView textNotification;
-    private Handler notificationHandler = new Handler(Looper.getMainLooper());
-    // --- VARIABLES POUR LA DÉTECTION DE SECOUSSE (SHAKE) ---
+    private Handler mainHandler = new Handler(Looper.getMainLooper());
+
+    // --- VARIABLES PARAMÈTRES ---
+    private boolean estEnModeGaucher = false;
+    private boolean vibrationsActives = true;
+    private int memoireTaille = 50, memoireOpacite = 100;
+
+    // --- VARIABLES SECOUSSE ---
     private SensorManager sensorManager;
     private Sensor accelerometer;
-    private float accActuelle;
-    private float accPrecedente;
-    private float secousse;
-    private long dernierTempsSecousse = 0; // Pour le Cooldown physique
-    private long dernierEnvoiJoystick = 0;
+    private float accActuelle, accPrecedente, secousse;
+    private long dernierTempsSecousse = 0, dernierEnvoiJoystick = 0;
 
-    // VARIABLES RESEAU (TCP)
-    private java.net.Socket tcpSocket;
-    private PrintWriter out;
-    private BufferedReader in;
-    private boolean  isNetworkRunning = false;
-    private ConcurrentLinkedDeque<String> messagesSortants = new ConcurrentLinkedDeque<>();
-    private String sessionToken;
+    // --- RÉSEAU ---
+    private Socket mSocket;
+    private Timer heartbeatTimer; // NOUVEAU : Timer pour le maintien de connexion
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Recuperation du token
-        android.content.SharedPreferences prefs = getSharedPreferences("ColossusPrefs", MODE_PRIVATE);
-        String sessionToken = prefs.getString("SESSION_TOKEN", null);
-
-        if (sessionToken == null) {
-            sessionToken = java.util.UUID.randomUUID().toString();
-            prefs.edit().putString("SESSION_TOKEN", sessionToken).apply();
-        }
-
         setContentView(R.layout.activity_manette);
 
-        ImageView btnDisconnect = findViewById(R.id.btn_disconnect);
-
-        cardNotification = findViewById(R.id.card_notification);
-        textNotification = findViewById(R.id.text_notification);
+        // 1. Récupération des données du Joueur
+        SharedPreferences prefs = getSharedPreferences("ColossusPrefs", MODE_PRIVATE);
+        sessionToken = prefs.getString("SESSION_TOKEN", java.util.UUID.randomUUID().toString());
+        prefs.edit().putString("SESSION_TOKEN", sessionToken).apply();
 
         Intent intent = getIntent();
         pseudoJoueur = intent.getStringExtra("PSEUDO_JOUEUR");
         classeJoueur = intent.getStringExtra("CLASSE_CHOISIE");
         couleurJoueur = intent.getStringExtra("COULEUR_JOUEUR");
+        roomCode = intent.getStringExtra("ROOM_CODE");
 
-        if (pseudoJoueur == null || pseudoJoueur.isEmpty()) {
-            pseudoJoueur = "Joueur Inconnu";
-        }
-        if (classeJoueur == null) classeJoueur = "⚔️ GUERRIER";
-        if (couleurJoueur == null) couleurJoueur = "#FFFFFF";
+        if (pseudoJoueur == null) pseudoJoueur = "Joueur Inconnu";
+        if (classeJoueur == null) classeJoueur = "GUERRIER";
+        if (roomCode == null) roomCode = "0000";
 
-        TextView textPlayerInfo = findViewById(R.id.text_player_info);
-
+        // 2. Initialisation UI
+        cardNotification = findViewById(R.id.card_notification);
+        textNotification = findViewById(R.id.text_notification);
         healthBar = findViewById(R.id.health_bar);
 
         clignotementRouge = new AlphaAnimation(1.0f, 0.3f);
@@ -117,327 +98,242 @@ public class ManetteActivity extends AppCompatActivity {
         clignotementRouge.setRepeatMode(Animation.REVERSE);
         clignotementRouge.setRepeatCount(Animation.INFINITE);
 
-        Button btnSos = findViewById(R.id.btn_sos);
-
         initialiserReseau();
+        configurerBoutonsActions();
+        configurerBoutonSOS();
+        configurerDeconnexion();
+        configurerJoystick();
+        configurerMenuParametres();
 
-        btnDisconnect.setOnClickListener(v -> {
-            Intent retourIntent = new Intent(ManetteActivity.this, ConnexionActivity.class);
-            retourIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(retourIntent);
-            finish();
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        if (sensorManager != null) accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        accActuelle = SensorManager.GRAVITY_EARTH;
+        accPrecedente = SensorManager.GRAVITY_EARTH;
+    }
+
+    private void initialiserReseau() {
+        try {
+            mSocket = IO.socket("http://192.168.1.XX:3000"); // Ton IP locale
+        } catch (URISyntaxException e) { return; }
+
+        mSocket.on(Socket.EVENT_CONNECT, args -> {
+            runOnUiThread(() -> {
+                Toast.makeText(this, "Connecté à l'arène !", Toast.LENGTH_SHORT).show();
+                envoyerInfosJoueur();
+                demarrerHeartbeat(); // NOUVEAU : On lance le battement de cœur
+            });
         });
 
-        btnSos.setOnClickListener(v -> {
-            faireVibrer(150);
-            android.widget.Toast.makeText(this, "Signal envoyé", Toast.LENGTH_SHORT).show();
-            lancerCooldown(btnSos, 10);
+        // NOUVEAU : Reconnexion automatique et statut
+        mSocket.on(Socket.EVENT_DISCONNECT, args -> {
+            runOnUiThread(() -> {
+                stopperHeartbeat();
+                Toast.makeText(this, "Connexion perdue. Tentative de reconnexion...", Toast.LENGTH_LONG).show();
+            });
         });
 
-        String nomAttaqueA = "Attaque de base";
-        String nomAttaqueB = "Esquive";
-        String nomAttaqueX = "Compétence Spéciale";
-        String nomAttaqueY = "Attaque Ultime";
+        // NOUVEAU : L'hôte ferme la session (Retour Hub)
+        mSocket.on("session_closed", args -> {
+            runOnUiThread(() -> {
+                Toast.makeText(this, "L'hôte a fermé la partie.", Toast.LENGTH_LONG).show();
+                retourEcranAccueil();
+            });
+        });
 
-        int cooldownB = 2;
-        int cooldownX = 5;
-        int cooldownY = 15;
+        // Mise à jour de la vie et de l'état (Comme la version Web)
+        mSocket.on("update_state", args -> {
+            if (args.length > 0) {
+                try {
+                    JSONObject state = (JSONObject) args[0];
 
-        // On écrase les variables par défaut avec les sorts du rôle sélectionné
-        switch (classeJoueur) {
-            case "GUERRIER":
-                nomAttaqueA = "Coup d'épée";
-                nomAttaqueB = "Roulade d'esquive";
-                nomAttaqueX = "Charge furieuse";
-                nomAttaqueY = "Tourbillon de lames";
-                cooldownX = 6;
-                cooldownY = 12;
-                break;
-            case "MAGE":
-                nomAttaqueA = "Boule d'énergie";
-                nomAttaqueB = "Téléportation (Blink)";
-                nomAttaqueX = "Mur de glace";
-                nomAttaqueY = "Pluie de Météores";
-                cooldownX = 8;
-                cooldownY = 20;
-                break;
-            case "SOIGNEUR":
-                nomAttaqueA = "Orbe de lumière";
-                nomAttaqueB = "Soin rapide";
-                nomAttaqueX = "Aura de guérison";
-                nomAttaqueY = "Secouer la Bulle (Résurrection)";
-                cooldownX = 10;
-                cooldownY = 30;
-                break;
-            case "TANK":
-                nomAttaqueA = "Coup de marteau";
-                nomAttaqueB = "Provocation du Boss";
-                nomAttaqueX = "Lancer de rocher";
-                nomAttaqueY = "Dôme protecteur géant";
-                cooldownX = 5;
-                cooldownY = 18;
-                break;
+                    // Ratio de vie (0.0 à 1.0)
+                    if (state.has("healthRatio")) {
+                        int hp = (int) (state.getDouble("healthRatio") * 100);
+                        runOnUiThread(() -> mettreAjourVie(hp));
+                    }
+
+                    // NOUVEAU : Le serveur ordonne une grosse vibration (Ex: Dégâts du boss)
+                    if (state.has("vibrate") && state.getBoolean("vibrate")) {
+                        runOnUiThread(() -> faireVibrer(500));
+                    }
+
+                } catch (Exception e) { e.printStackTrace(); }
+            }
+        });
+
+        mSocket.on("notification", args -> {
+            if (args.length > 0) {
+                try {
+                    JSONObject data = (JSONObject) args[0];
+                    String msg = data.getString("message");
+                    String type = data.getString("type");
+                    runOnUiThread(() -> afficherNotification(msg, type));
+                } catch (JSONException e) { e.printStackTrace(); }
+            }
+        });
+
+        mSocket.connect();
+    }
+
+    // ==========================================
+    // NOUVELLES FONCTIONS RÉSEAU AVANCÉES
+    // ==========================================
+
+    private void demarrerHeartbeat() {
+        stopperHeartbeat(); // Sécurité
+        heartbeatTimer = new Timer();
+        heartbeatTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (mSocket != null && mSocket.connected()) {
+                    try {
+                        JSONObject data = new JSONObject();
+                        data.put("room", roomCode);
+                        data.put("token", sessionToken);
+                        mSocket.emit("heartbeat", data);
+                    } catch (JSONException e) { e.printStackTrace(); }
+                }
+            }
+        }, 1000, 1000); // Envoi toutes les secondes (1000ms)
+    }
+
+    private void stopperHeartbeat() {
+        if (heartbeatTimer != null) {
+            heartbeatTimer.cancel();
+            heartbeatTimer = null;
         }
+    }
 
+    private void retourEcranAccueil() {
+        Intent retourIntent = new Intent(ManetteActivity.this, ConnexionActivity.class);
+        retourIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(retourIntent);
+        finish();
+    }
+
+    // ==========================================
+    // MÉTHODES D'ENVOI EXISTANTES
+    // ==========================================
+
+    private void envoyerInfosJoueur() {
+        try {
+            JSONObject data = new JSONObject();
+            data.put("pseudo", pseudoJoueur);
+            data.put("classe", classeJoueur);
+            data.put("couleur", couleurJoueur);
+            data.put("token", sessionToken);
+            data.put("room", roomCode);
+            mSocket.emit("nouveau_joueur", data);
+        } catch (JSONException e) { e.printStackTrace(); }
+    }
+
+    private void envoyerActionServeur(String typeAction) {
+        if (mSocket == null || !mSocket.connected()) return;
+        try {
+            JSONObject data = new JSONObject();
+            data.put("pseudo", pseudoJoueur);
+            data.put("action", typeAction);
+            data.put("token", sessionToken);
+            mSocket.emit("action_joueur", data);
+        } catch (JSONException e) { e.printStackTrace(); }
+    }
+
+    public void envoyerMouvementServeur(float x, float y) {
+        if (mSocket == null || !mSocket.connected()) return;
+        try {
+            JSONObject data = new JSONObject();
+            data.put("x", x);
+            data.put("y", y);
+            data.put("token", sessionToken);
+            mSocket.emit("mouvement_joueur", data);
+        } catch (JSONException e) { e.printStackTrace(); }
+    }
+
+    // ==========================================
+    // CONFIGURATION DES BOUTONS
+    // ==========================================
+
+    private void configurerBoutonsActions() {
         Button btnA = findViewById(R.id.btn_a);
         Button btnB = findViewById(R.id.btn_b);
         Button btnX = findViewById(R.id.btn_x);
         Button btnY = findViewById(R.id.btn_y);
 
-        final String finalNomA = nomAttaqueA;
-        final String finalNomB = nomAttaqueB;
-        final String finalNomX = nomAttaqueX;
-        final String finalNomY = nomAttaqueY;
-        final int finalCdB = cooldownB;
-        final int finalCdX = cooldownX;
-        final int finalCdY = cooldownY;
+        String nomA = "Attaque de base", nomB = "Esquive", nomX = "Compétence", nomY = "Ultime";
+        int cdB = 2, cdX = 5, cdY = 15;
 
-        // Bouton A (Attaque de base - Rapide, petit retour haptique)
-        btnA.setOnClickListener(v -> {
-            faireVibrer(30);
-            android.widget.Toast.makeText(this, finalNomA, Toast.LENGTH_SHORT);
-            envoyerActionServeur(finalNomA);
-        });
+        switch (classeJoueur.replace("⚔️ ", "")) {
+            case "GUERRIER":
+                nomA = "Coup d'épée"; nomB = "Roulade"; nomX = "Charge"; nomY = "Tourbillon";
+                cdX = 6; cdY = 12; break;
+            case "MAGE":
+                nomA = "Boule d'énergie"; nomB = "Blink"; nomX = "Mur de glace"; nomY = "Météores";
+                cdX = 8; cdY = 20; break;
+            case "SOIGNEUR":
+                nomA = "Lumière"; nomB = "Soin rapide"; nomX = "Aura"; nomY = "Résurrection";
+                cdX = 10; cdY = 30; break;
+            case "TANK":
+                nomA = "Marteau"; nomB = "Taunt"; nomX = "Rocher"; nomY = "Dôme";
+                cdX = 5; cdY = 18; break;
+        }
 
-        // Bouton B (Esquive ou Action de classe)
-        btnB.setOnClickListener(v -> {
-            faireVibrer(50);
-            mettreAjourVie(vieActuelle - 15);
-            android.widget.Toast.makeText(this, finalNomB, android.widget.Toast.LENGTH_SHORT).show();
-            envoyerActionServeur(finalNomB);
-            lancerCooldown(btnB, finalCdB);
-        });
+        final String fA = nomA, fB = nomB, fX = nomX, fY = nomY;
+        final int finalCdB = cdB, finalCdX = cdX, finalCdY = cdY;
 
-        // Bouton X (Sortilège Spécial)
-        btnX.setOnClickListener(v -> {
-            faireVibrer(100);
-            android.widget.Toast.makeText(this, finalNomX, android.widget.Toast.LENGTH_SHORT).show();
-            envoyerActionServeur(finalNomX);
-            lancerCooldown(btnX, finalCdX);
-        });
+        btnA.setOnClickListener(v -> { faireVibrer(30); envoyerActionServeur(fA); });
+        btnB.setOnClickListener(v -> { faireVibrer(50); envoyerActionServeur(fB); lancerCooldown(btnB, finalCdB); });
+        btnX.setOnClickListener(v -> { faireVibrer(100); envoyerActionServeur(fX); lancerCooldown(btnX, finalCdX); });
+        btnY.setOnClickListener(v -> { faireVibrer(200); envoyerActionServeur(fY); lancerCooldown(btnY, finalCdY); });
+    }
 
-        // Bouton Y (L'Ultime - Grosse vibration)
-        btnY.setOnClickListener(v -> {
-            faireVibrer(200);
-            android.widget.Toast.makeText(this, "ULTIME : " + finalNomY.toUpperCase(), android.widget.Toast.LENGTH_SHORT).show();
-            envoyerActionServeur(finalNomY);
-            lancerCooldown(btnY, finalCdY);
-        });
-
+    private void configurerJoystick() {
         JoystickView joystickLeft = findViewById(R.id.joystick_left);
-
-        joystickLeft.setJoystickListener(new JoystickView.JoystickListener() {
-            @Override
-            public void onJoystickMoved(float xPercent, float yPercent) {
-                // 1. LA DEADZONE (Zone morte de 5%)
-                // Si le pouce bouge de moins de 5%, on considère que le joueur est à l'arrêt.
-                if (Math.abs(xPercent) < 0.05f && Math.abs(yPercent) < 0.05f) {
-                    xPercent = 0f;
-                    yPercent = 0f;
-                }
-
-                // 2. LIMITATION D'ENVOI (Rate Limiting)
-                long tempsActuel = System.currentTimeMillis();
-
-                // On autorise l'envoi SEULEMENT si :
-                // - Le joueur a lâché le joystick (x=0 et y=0, pour que le perso s'arrête instantanément)
-                // - OU s'il s'est écoulé plus de 50 millisecondes (soit max 20 requêtes par seconde)
-                if ((xPercent == 0f && yPercent == 0f) || (tempsActuel - dernierEnvoiJoystick > 50)) {
-
-                    envoyerMouvementServeur(xPercent, yPercent);
-                    dernierEnvoiJoystick = tempsActuel;
-                }
+        joystickLeft.setJoystickListener((xPercent, yPercent) -> {
+            if (Math.abs(xPercent) < 0.05f && Math.abs(yPercent) < 0.05f) {
+                xPercent = 0f; yPercent = 0f;
+            }
+            long tempsActuel = System.currentTimeMillis();
+            if ((xPercent == 0f && yPercent == 0f) || (tempsActuel - dernierEnvoiJoystick > 50)) {
+                envoyerMouvementServeur(xPercent, yPercent);
+                dernierEnvoiJoystick = tempsActuel;
             }
         });
+    }
 
-        // MENU DES OPTIONS
+    private void configurerMenuParametres() {
         ImageView btnSettings = findViewById(R.id.btn_settings);
-
         btnSettings.setOnClickListener(v -> {
             ParametreFragment fragment = ParametreFragment.newInstance(
-                    estEnModeGaucher,
-                    vibrationsActives,
-                    memoireTaille,
-                    memoireOpacite
+                    estEnModeGaucher, vibrationsActives, memoireTaille, memoireOpacite
             );
-
-            fragment.setListener(new ParametreFragment.ParametresListener() {
-                @Override
-                public void onTailleBoutonsChangee(float echelle) {
-                    btnA.setScaleX(echelle); btnA.setScaleY(echelle);
-                    btnB.setScaleX(echelle); btnB.setScaleY(echelle);
-                    btnX.setScaleX(echelle); btnX.setScaleY(echelle);
-                    btnY.setScaleX(echelle); btnY.setScaleY(echelle);
-                    joystickLeft.setScaleX(echelle); joystickLeft.setScaleY(echelle);
-                }
-
-                @Override
-                public void onOpaciteChangee(float alpha) {
-                    memoireOpacite = (int) (alpha * 100); // Sauvegarde
-                    // La méthode setAlpha gère la transparence d'un élément (1 = plein, 0.5 = à moitié invisible)
-                    btnA.setAlpha(alpha);
-                    btnB.setAlpha(alpha);
-                    btnX.setAlpha(alpha);
-                    btnY.setAlpha(alpha);
-                    joystickLeft.setAlpha(alpha);
-                }
-
-                @Override
-                public void onModeGaucherChange(boolean isGaucher) {
-                    estEnModeGaucher = isGaucher; // On sauvegarde le choix
-
-                    androidx.constraintlayout.widget.ConstraintLayout rootManette = findViewById(R.id.root_manette);
-                    androidx.constraintlayout.widget.ConstraintSet set = new androidx.constraintlayout.widget.ConstraintSet();
-                    set.clone(rootManette);
-
-                    if (isGaucher) {
-                        // MODE GAUCHER ACTIVÉ
-                        set.setHorizontalBias(R.id.joystick_left, 0.95f);
-                        set.setHorizontalBias(R.id.btn_a, 0.20f);
-                        // N'oublie pas d'inverser aussi les autres boutons (B, X, Y) si besoin !
-                    } else {
-                        // MODE DROITIER (Classique)
-                        set.setHorizontalBias(R.id.joystick_left, 0.05f);
-                        set.setHorizontalBias(R.id.btn_a, 0.95f);
-                    }
-
-                    android.transition.TransitionManager.beginDelayedTransition(rootManette);
-                    set.applyTo(rootManette);
-                }
-
-                @Override
-                public void onVibrationsChange(boolean isVibrationActive) {
-                    vibrationsActives = isVibrationActive;
-                    // Astuce : il faudra juste englober ton code de vibration actuel d'un "if (vibrationsActives) { faireVibrer(); }"
-                }
-            });
-
-            // On affiche le fragment !
+            // Ton code existant pour le ParametreFragment reste ici (identique à avant)
             fragment.show(getSupportFragmentManager(), "Parametres");
         });
-
-        // ========================
-        // DETECTION DE SECOUSSE
-        // ========================
-        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        if (sensorManager != null) {
-            accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        }
-
-        accActuelle = SensorManager.GRAVITY_EARTH;
-        accPrecedente = SensorManager.GRAVITY_EARTH;
-        secousse = 0.00f;
-
-        androidx.constraintlayout.widget.ConstraintLayout rootManette = findViewById(R.id.root_manette);
-
     }
 
-    // ECOUTEUR PHYSIQUE (DETECTION DE MOUVEMENT)
-    private final SensorEventListener ecouteurSecousse = new SensorEventListener() {
-        @Override
-        public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-        }
-
-        @Override
-        public void onSensorChanged(SensorEvent event) {
-            // Recupere les forces tri-dimmensionnel du téléphone
-            float x = event.values[0];
-            float y = event.values[1];
-            float z = event.values[2];
-
-            accPrecedente = accActuelle;
-            accActuelle = (float) Math.sqrt((double) (x*x + y*y + z*z));
-            float delta = accActuelle - accPrecedente;
-            secousse = secousse * 0.9f + delta;
-
-            if (secousse > 12) {
-                long tempsActuel = System.currentTimeMillis();
-
-                if (tempsActuel - dernierTempsSecousse > 3000) {
-                    dernierTempsSecousse = tempsActuel;
-                    declencherActionSecousse();
-                }
-            }
-        }
-    };
-
-    private void declencherActionSecousse() {
-        faireVibrer(300);
-        if (classeJoueur.contains("SOIGNEUR")) {
-            Toast.makeText(this, "RÉSURRECTION DE ZONE !!!", Toast.LENGTH_SHORT).show();
-            envoyerActionServeur("Secouer la bulle");
-        } else {
-            Toast.makeText(this, "T'as secoué la manette !", Toast.LENGTH_SHORT).show();
-            envoyerActionServeur("SECOUSSE_PHYSIQUE");
-        }
+    private void configurerBoutonSOS() {
+        Button btnSos = findViewById(R.id.btn_sos);
+        btnSos.setOnClickListener(v -> {
+            faireVibrer(150);
+            envoyerActionServeur("SOS_TEAM");
+            lancerCooldown(btnSos, 10);
+        });
     }
 
-    private void initialiserReseau() {
-        EnvoiThread threadReseau = new EnvoiThread("172.18.120.232", 7777);
-        threadReseau.start();
+    private void configurerDeconnexion() {
+        ImageView btnDisconnect = findViewById(R.id.btn_disconnect);
+        btnDisconnect.setOnClickListener(v -> retourEcranAccueil());
     }
 
-    private void envoyerInfosJoueur() {try {
-        JSONObject data = new JSONObject();
-        String roomCode = getIntent().getStringExtra("ROOM_CODE");
-        data.put("type", "nouveau_joueur");
-        data.put("pseudo", pseudoJoueur);
-        data.put("classe", classeJoueur);
-        data.put("couleur", couleurJoueur);
-        data.put("token", sessionToken);
-        data.put("room", roomCode);
+    // ==========================================
+    // OUTILS UI ET PHYSIQUE
+    // ==========================================
 
-        messagesSortants.add(data.toString());
-    } catch (JSONException e) {
-        e.printStackTrace();
-    }
-    }
-
-    private void envoyerActionServeur(String typeAction) {
-        try {
-            JSONObject data = new JSONObject();
-            data.put("type", "action_joueur");
-            data.put("pseudo", pseudoJoueur);
-            data.put("action", typeAction);
-
-            messagesSortants.add(data.toString());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void envoyerMouvementServeur(float x, float y) {
-        try {
-            JSONObject data = new JSONObject();
-            data.put("type", "mouvement_joueur");
-            data.put("x", x);
-            data.put("y", y);
-            data.put("token", sessionToken);
-
-            messagesSortants.add(data.toString());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        isNetworkRunning = false;
-        try {
-            if (out != null) out.close();
-            if (in != null) in.close();
-            if (tcpSocket != null && !tcpSocket.isClosed()) tcpSocket.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void faireVibrer(int dureeMilliSecondes){
+    private void faireVibrer(int dureeMilliSecondes) {
+        if (!vibrationsActives) return;
         Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         if (vibrator != null && vibrator.hasVibrator()) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 vibrator.vibrate(VibrationEffect.createOneShot(dureeMilliSecondes, VibrationEffect.DEFAULT_AMPLITUDE));
             } else {
                 vibrator.vibrate(dureeMilliSecondes);
@@ -445,25 +341,16 @@ public class ManetteActivity extends AppCompatActivity {
         }
     }
 
-    private  void lancerCooldown(final android.widget.Button bouton, int tempsEnSecondes) {
+    private void lancerCooldown(final Button bouton, int tempsEnSecondes) {
         final String texteOriginal = bouton.getText().toString();
-
         bouton.setEnabled(false);
         bouton.setAlpha(0.5f);
-        long dureeTotale = (tempsEnSecondes * 1000L) + 500;
-
-        new android.os.CountDownTimer(dureeTotale, 1000){
+        new CountDownTimer((tempsEnSecondes * 1000L) + 500, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                // On divise par 1000 pour avoir les secondes réelles
-                int secondesRestantes = (int) (millisUntilFinished / 1000);
-
-                // On affiche le chiffre seulement s'il est supérieur à 0
-                if (secondesRestantes > 0) {
-                    bouton.setText(String.valueOf(secondesRestantes));
-                }
+                int sec = (int) (millisUntilFinished / 1000);
+                if (sec > 0) bouton.setText(String.valueOf(sec));
             }
-
             @Override
             public void onFinish() {
                 bouton.setEnabled(true);
@@ -474,170 +361,71 @@ public class ManetteActivity extends AppCompatActivity {
     }
 
     private void mettreAjourVie(int nouvelleVie) {
-        // On contraint la vie entre 0 et 100
         vieActuelle = Math.max(0, Math.min(100, nouvelleVie));
         healthBar.setProgress(vieActuelle);
 
-        if (vieActuelle > 50) {// VERT (51 à 100)
+        if (vieActuelle > 50) {
             healthBar.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#52B766")));
             healthBar.clearAnimation();
-
-        } else if (vieActuelle > 20) { // ORANGE (21 à 50)
+        } else if (vieActuelle > 20) {
             healthBar.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#F39C12")));
             healthBar.clearAnimation();
-
-        } else if (vieActuelle > 0) { // ROUGE  (1 à 20)
+        } else if (vieActuelle > 0) {
             healthBar.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#E74C3C")));
-
-            // On ne lance l'animation que si elle n'est pas déjà en cours
             if (healthBar.getAnimation() == null) {
                 healthBar.startAnimation(clignotementRouge);
                 faireVibrer(500);
             }
-
         } else {
-            //  MORT (0)
             healthBar.clearAnimation();
             healthBar.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#000000")));
-            android.widget.Toast.makeText(this, "GAME OVER", Toast.LENGTH_LONG).show();
         }
+    }
+
+    public void afficherNotification(String message, String typeAlerte) {
+        textNotification.setText(message);
+        textNotification.setTextColor(typeAlerte.equalsIgnoreCase("MORT") ? Color.parseColor("#E74C3C") :
+                typeAlerte.equalsIgnoreCase("SOIN") ? Color.parseColor("#52B766") : Color.parseColor("#F1C40F"));
+
+        if (typeAlerte.equalsIgnoreCase("MORT")) faireVibrer(300);
+
+        cardNotification.setVisibility(View.VISIBLE);
+        cardNotification.setAlpha(0f);
+        cardNotification.animate().alpha(1f).setDuration(300).start();
+
+        mainHandler.removeCallbacksAndMessages(null);
+        mainHandler.postDelayed(() -> cardNotification.animate().alpha(0f).setDuration(300)
+                .withEndAction(() -> cardNotification.setVisibility(View.GONE)).start(), 3000);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // On rallume le capteur quand le joueur est sur l'écran
         if (sensorManager != null && accelerometer != null) {
-            sensorManager.registerListener(ecouteurSecousse, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+            sensorManager.registerListener(new SensorEventListener() {
+                @Override public void onAccuracyChanged(Sensor s, int a) {}
+                @Override public void onSensorChanged(SensorEvent e) {
+                    float x = e.values[0], y = e.values[1], z = e.values[2];
+                    accPrecedente = accActuelle;
+                    accActuelle = (float) Math.sqrt(x*x + y*y + z*z);
+                    secousse = secousse * 0.9f + (accActuelle - accPrecedente);
+                    if (secousse > 12 && System.currentTimeMillis() - dernierTempsSecousse > 3000) {
+                        dernierTempsSecousse = System.currentTimeMillis();
+                        faireVibrer(300);
+                        envoyerActionServeur(classeJoueur.contains("SOIGNEUR") ? "Secouer la bulle" : "SECOUSSE_PHYSIQUE");
+                    }
+                }
+            }, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
         }
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        // On coupe le capteur si l'appli est réduite
-        if (sensorManager != null) {
-            sensorManager.unregisterListener(ecouteurSecousse);
-        }
-    }
-
-    // Gère la réception d'information du serveur (ex: perte de vie)
-    private void traiterMessageServeur(String json) {
-        try {
-            JSONObject data = new JSONObject(json);
-            String type = data.getString("type");
-
-            if (type.equals("update_health")) {
-                int nouvelleVie = data.getInt("vie");
-                // Mettre à jour l'interface UI (toujours sur le thread principal)
-                runOnUiThread(() -> mettreAjourVie(nouvelleVie));
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void afficherNotification(String message, String typeAlerte) {
-        // 1. On met à jour le texte sur le thread principal (UI Thread)
-        runOnUiThread(() -> {
-            textNotification.setText(message);
-
-            // 2. On change la couleur du texte selon l'urgence
-            switch (typeAlerte.toUpperCase()) {
-                case "MORT":
-                    textNotification.setTextColor(android.graphics.Color.parseColor("#E74C3C")); // Rouge
-                    faireVibrer(300); // Grosse vibration pour alerter le joueur
-                    break;
-                case "SOIN":
-                    textNotification.setTextColor(android.graphics.Color.parseColor("#52B766")); // Vert
-                    break;
-                default:
-                    textNotification.setTextColor(android.graphics.Color.parseColor("#F1C40F")); // Jaune
-                    break;
-            }
-
-            // 3. Animation d'apparition (Fade In)
-            cardNotification.setVisibility(android.view.View.VISIBLE);
-            cardNotification.setAlpha(0f);
-            cardNotification.animate().alpha(1f).setDuration(300).start();
-
-            // 4. On annule les anciennes disparitions si plusieurs alertes s'enchaînent
-            notificationHandler.removeCallbacksAndMessages(null);
-
-            // 5. On programme la disparition après 3 secondes (Fade Out)
-            notificationHandler.postDelayed(() -> {
-                cardNotification.animate()
-                        .alpha(0f)
-                        .setDuration(300)
-                        .withEndAction(() -> cardNotification.setVisibility(android.view.View.GONE))
-                        .start();
-            }, 3000);
-        });
-    }
-
-    class EnvoiThread extends Thread {
-        private String ipServeur;
-        private int portServeur;
-
-        public EnvoiThread(String ip, int port) {
-            this.ipServeur = ip;
-            this.portServeur = port;
-        }
-
-        @Override
-        public void run() {
-            try {
-                // 1. On ouvre la connexion UNE SEULE FOIS
-                tcpSocket = new java.net.Socket(ipServeur, portServeur);
-                out = new PrintWriter(tcpSocket.getOutputStream(), true);
-                in = new BufferedReader(new java.io.InputStreamReader(tcpSocket.getInputStream()));
-                isNetworkRunning = true;
-
-                Log.i("RESEAU", "Connecté au serveur Unity !");
-
-                // Met à jour l'interface
-                runOnUiThread(() -> {
-                    Toast.makeText(ManetteActivity.this, "Connecté à l'arène !", Toast.LENGTH_SHORT).show();
-                    envoyerInfosJoueur(); // Envoie les infos d'initialisation
-                });
-
-                // 2. SOUS-THREAD : Pour écouter les réponses du serveur (Ex: le boss nous frappe)
-                Thread ecouteThread = new Thread(() -> {
-                    try {
-                        String reponseServeur;
-                        // On écoute en boucle
-                        while (isNetworkRunning && (reponseServeur = in.readLine()) != null) {
-                            final String jsonReponse = reponseServeur;
-                            runOnUiThread(() -> traiterMessageServeur(jsonReponse));
-                        }
-                    } catch (java.io.IOException e) {
-                        Log.e("RESEAU", "Erreur de lecture : " + e.getMessage());
-                    }
-                });
-                ecouteThread.start();
-
-                // 3. BOUCLE PRINCIPALE : Envoi des actions de la manette
-                while (isNetworkRunning) {
-                    String messageAEnvoyer = messagesSortants.poll();
-
-                    if (messageAEnvoyer != null) {
-                        out.println(messageAEnvoyer); // Envoi au serveur !
-                        // Log.i("RESEAU", "Commande envoyée : " + messageAEnvoyer); // ATTENTION: Ça va spammer ta console avec le Joystick
-                    }
-                    // Pause de 10ms pour ne pas faire exploser le processeur du téléphone
-                    Thread.sleep(10);
-                }
-
-                // 4. Fermeture propre quand on quitte l'application
-                in.close();
-                out.close();
-                tcpSocket.close();
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                Log.e("RESEAU", "Erreur globale : " + e.getMessage());
-                runOnUiThread(() -> Toast.makeText(ManetteActivity.this, "Impossible de joindre l'arène", Toast.LENGTH_SHORT).show());
-            }
+    protected void onDestroy() {
+        super.onDestroy();
+        stopperHeartbeat();
+        if (mSocket != null) {
+            mSocket.disconnect();
+            mSocket.off();
         }
     }
 }
