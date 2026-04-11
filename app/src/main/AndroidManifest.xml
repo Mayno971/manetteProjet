@@ -19,33 +19,26 @@
         android:theme="@style/Theme.ApplicationMobile">
 
         <activity
-            android:name=".RotationActivity"
-            android:screenOrientation="sensorPortrait"
-            android:exported="true"
-            tools:ignore="DiscouragedApi">
-
-        </activity>
-
-        <activity
             android:name=".ConnexionActivity"
             android:screenOrientation="sensorLandscape"
-            android:exported="false" />
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            android:exported="true"> <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
 
-        <activity
-            android:name=".ChoixClasseActivity"
-            android:screenOrientation="sensorLandscape"
-            android:exported="false" />
+        </activity> <activity
+        android:name=".ChoixClasseActivity"
+        android:screenOrientation="sensorLandscape"
+        android:exported="false" />
 
         <activity
             android:name=".CustomActivity"
             android:screenOrientation="sensorLandscape"
             android:exported="false" />
 
-        <activity android:name=".LobbyActivity"
+        <activity
+            android:name=".LobbyActivity"
+            android:screenOrientation="sensorLandscape"
             android:exported="false" />
 
         <activity

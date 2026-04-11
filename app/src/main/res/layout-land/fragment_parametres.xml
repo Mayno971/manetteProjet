@@ -89,9 +89,9 @@
             android:id="@+id/switch_vibrations"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:layout_marginEnd="8dp"
-            android:text="Retours Haptiques"
+            android:layout_weight="1"
+            android:text="Vibrations"
             android:textColor="#FFFFFF"
             android:textSize="14sp" />
 

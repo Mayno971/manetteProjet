@@ -254,11 +254,13 @@ public class ManetteActivity extends AppCompatActivity {
         ImageView btnSettings = findViewById(R.id.btn_settings);
 
         btnSettings.setOnClickListener(v -> {
-            ParametreFragment fragment = new ParametreFragment();
+            ParametreFragment fragment = ParametreFragment.newInstance(
+                    estEnModeGaucher,
+                    vibrationsActives,
+                    memoireTaille,
+                    memoireOpacite
+            );
 
-            fragment.setEtatsInitiaux(estEnModeGaucher, vibrationsActives, memoireTaille, memoireOpacite);
-
-            // On écoute ce que le fragment nous dit de faire
             fragment.setListener(new ParametreFragment.ParametresListener() {
                 @Override
                 public void onTailleBoutonsChangee(float echelle) {
@@ -378,11 +380,13 @@ public class ManetteActivity extends AppCompatActivity {
 
     private void envoyerInfosJoueur() {try {
         JSONObject data = new JSONObject();
+        String roomCode = getIntent().getStringExtra("ROOM_CODE");
         data.put("type", "nouveau_joueur");
         data.put("pseudo", pseudoJoueur);
         data.put("classe", classeJoueur);
         data.put("couleur", couleurJoueur);
         data.put("token", sessionToken);
+        data.put("room", roomCode);
 
         messagesSortants.add(data.toString());
     } catch (JSONException e) {

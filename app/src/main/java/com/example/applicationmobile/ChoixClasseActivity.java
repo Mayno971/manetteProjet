@@ -23,6 +23,7 @@ public class ChoixClasseActivity extends AppCompatActivity {
         android.widget.Toast.makeText(this, "Bouton cliqué : " + nomClasse, Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(ChoixClasseActivity.this, CustomActivity.class);
         intent.putExtra("CLASSE_CHOISIE", nomClasse);
+        intent.putExtra("ROOM_CODE", getIntent().getStringExtra("ROOM_CODE"));
         startActivity(intent);
     }
 }
