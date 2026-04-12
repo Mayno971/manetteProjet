@@ -47,6 +47,7 @@ public class ManetteActivity extends AppCompatActivity {
 
     // --- VARIABLES UI & VIE ---
     private ProgressBar healthBar;
+    private TextView textHealth;
     private AlphaAnimation clignotementRouge;
     private int vieActuelle = 100;
     private androidx.cardview.widget.CardView cardNotification;
@@ -92,6 +93,7 @@ public class ManetteActivity extends AppCompatActivity {
         cardNotification = findViewById(R.id.card_notification);
         textNotification = findViewById(R.id.text_notification);
         healthBar = findViewById(R.id.health_bar);
+        textHealth = findViewById(R.id.text_health);
 
         clignotementRouge = new AlphaAnimation(1.0f, 0.3f);
         clignotementRouge.setDuration(400);
@@ -113,7 +115,7 @@ public class ManetteActivity extends AppCompatActivity {
 
     private void initialiserReseau() {
         try {
-            mSocket = IO.socket("http://192.168.1.XX:3000"); // Ton IP locale
+            mSocket = IO.socket("http://192.168.1.XX:3000");
         } catch (URISyntaxException e) { return; }
 
         mSocket.on(Socket.EVENT_CONNECT, args -> {
@@ -178,7 +180,6 @@ public class ManetteActivity extends AppCompatActivity {
     // ==========================================
     // NOUVELLES FONCTIONS RÉSEAU AVANCÉES
     // ==========================================
-
     private void demarrerHeartbeat() {
         stopperHeartbeat(); // Sécurité
         heartbeatTimer = new Timer();
@@ -363,6 +364,7 @@ public class ManetteActivity extends AppCompatActivity {
     private void mettreAjourVie(int nouvelleVie) {
         vieActuelle = Math.max(0, Math.min(100, nouvelleVie));
         healthBar.setProgress(vieActuelle);
+        textHealth.setText(vieActuelle + " / 100 PV");
 
         if (vieActuelle > 50) {
             healthBar.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#52B766")));

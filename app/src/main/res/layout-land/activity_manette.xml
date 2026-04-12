@@ -9,68 +9,98 @@
     android:keepScreenOn="true"
     tools:ignore="MissingDefaultResource">
 
-    <LinearLayout
-        android:id="@+id/top_bar"
-        android:layout_width="match_parent"
+    <androidx.cardview.widget.CardView
+        android:id="@+id/card_notification"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="4dp"
+        android:layout_marginTop="24dp"
+        android:visibility="gone"
+        android:translationZ="10dp"
+        app:cardBackgroundColor="#CC000000"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <androidx.cardview.widget.CardView
-            android:id="@+id/card_notification"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:visibility="gone"
-            app:cardBackgroundColor="#CC000000"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="8dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <TextView
-                android:id="@+id/text_notification"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingHorizontal="20dp"
-                android:paddingVertical="10dp"
-                android:text="Alerte Système"
-                android:textAlignment="center"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-        </androidx.cardview.widget.CardView>
-
         <TextView
-            android:id="@+id/text_player_info"
+            android:id="@+id/text_notification"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="PSEUDO - GUERRIER"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="10dp"
+            android:text="Alerte Système"
+            android:textAlignment="center"
             android:textColor="#FFFFFF"
-            android:textSize="16sp"
+            android:textSize="14sp"
             android:textStyle="bold" />
+    </androidx.cardview.widget.CardView>
+
+
+    <TextView
+        android:id="@+id/text_player_info"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:text="PSEUDO - GUERRIER"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <LinearLayout
+        android:id="@+id/health_container"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="16dp"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toStartOf="@+id/layout_top_buttons"
+        app:layout_constraintStart_toEndOf="@+id/text_player_info"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_max="400dp">
 
         <ProgressBar
             android:id="@+id/health_bar"
             style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="0dp"
-            android:layout_height="24dp"
-            android:layout_marginStart="24dp"
-            android:layout_marginEnd="24dp"
-            android:layout_weight="1"
+            android:layout_width="match_parent"
+            android:layout_height="22dp"
+            android:max="100"
             android:progress="100"
-            android:progressBackgroundTint="#000000"
             android:progressTint="#52B766" />
+
+        <TextView
+            android:id="@+id/text_health"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="4dp"
+            android:text="100 / 100 PV"
+            android:textColor="#81A1C1"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/layout_top_buttons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
             android:id="@+id/btn_settings"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginEnd="16dp"
+            android:layout_marginEnd="12dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
@@ -82,7 +112,7 @@
             android:id="@+id/btn_sos"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:layout_marginEnd="16dp"
+            android:layout_marginEnd="12dp"
             android:insetLeft="0dp"
             android:insetTop="0dp"
             android:insetRight="0dp"
@@ -107,98 +137,82 @@
             app:tint="#E74C3C" />
     </LinearLayout>
 
+
     <com.example.applicationmobile.JoystickView
         android:id="@+id/joystick_left"
         android:layout_width="200dp"
         android:layout_height="200dp"
-        android:layout_marginBottom="40dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginBottom="24dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.05"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_a"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_marginBottom="28dp"
-        android:text="A"
-        android:textColor="#000000"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        app:backgroundTint="#A3BE8C"
-        app:cornerRadius="40dp"
+
+    <Space
+        android:id="@+id/center_buttons"
+        android:layout_width="0dp"
+        android:layout_height="5dp"
+        android:layout_marginEnd="150dp"
+        android:layout_marginBottom="150dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.826"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_y"
         android:layout_width="80dp"
         android:layout_height="80dp"
-        android:layout_marginBottom="76dp"
+        android:layout_marginBottom="40dp"
         android:text="Y"
         android:textColor="#000000"
-        android:textSize="24sp"
+        android:textSize="22sp"
         android:textStyle="bold"
         app:backgroundTint="#EBCB8B"
-        app:cornerRadius="40dp"
-        app:layout_constraintBottom_toTopOf="@+id/btn_a"
-        app:layout_constraintEnd_toEndOf="@+id/btn_a"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@+id/btn_a" />
+        app:cornerRadius="35dp"
+        app:layout_constraintBottom_toTopOf="@+id/center_buttons"
+        app:layout_constraintEnd_toEndOf="@+id/center_buttons"
+        app:layout_constraintStart_toStartOf="@+id/center_buttons" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_a"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginTop="40dp"
+        android:text="A"
+        android:textColor="#000000"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        app:backgroundTint="#A3BE8C"
+        app:cornerRadius="45dp"
+        app:layout_constraintEnd_toEndOf="@+id/center_buttons"
+        app:layout_constraintStart_toStartOf="@+id/center_buttons"
+        app:layout_constraintTop_toBottomOf="@+id/center_buttons" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_x"
         android:layout_width="80dp"
         android:layout_height="80dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="40dp"
         android:text="X"
-        android:textSize="24sp"
+        android:textSize="22sp"
         android:textStyle="bold"
         app:backgroundTint="#81A1C1"
-        app:cornerRadius="40dp"
-        app:layout_constraintBottom_toBottomOf="@+id/btn_a"
-        app:layout_constraintEnd_toStartOf="@+id/btn_a"
-        app:layout_constraintTop_toTopOf="@+id/btn_y" />
+        app:cornerRadius="35dp"
+        app:layout_constraintBottom_toBottomOf="@+id/center_buttons"
+        app:layout_constraintEnd_toStartOf="@+id/center_buttons"
+        app:layout_constraintTop_toTopOf="@+id/center_buttons" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_b"
         android:layout_width="80dp"
         android:layout_height="80dp"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="40dp"
         android:text="B"
-        android:textSize="24sp"
+        android:textSize="22sp"
         android:textStyle="bold"
         app:backgroundTint="#BF616A"
-        app:cornerRadius="40dp"
-        app:layout_constraintBottom_toBottomOf="@+id/btn_a"
-        app:layout_constraintStart_toEndOf="@+id/btn_a"
-        app:layout_constraintTop_toTopOf="@+id/btn_y" />
-
-    <androidx.cardview.widget.CardView
-        android:id="@+id/card_notification"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:cardBackgroundColor="#CC000000"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="8dp"
-        tools:layout_constraintTop_toTopOf="parent"
-        tools:layout_editor_absoluteX="243dp"
-        tools:layout_editor_absoluteY="110dp">
-
-    </androidx.cardview.widget.CardView>
-
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TextView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/top_bar" />
+        app:cornerRadius="45dp"
+        app:layout_constraintBottom_toBottomOf="@+id/center_buttons"
+        app:layout_constraintStart_toEndOf="@+id/center_buttons"
+        app:layout_constraintTop_toTopOf="@+id/center_buttons" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
