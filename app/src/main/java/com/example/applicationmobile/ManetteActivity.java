@@ -56,7 +56,7 @@ public class ManetteActivity extends AppCompatActivity implements WebSocketManag
     private float accActuelle, accPrecedente, secousse;
     private long dernierTempsSecousse = 0, dernierEnvoiJoystick = 0;
 
-    // --- COOLDOWNS DYNAMIQUES (Gérés par le serveur) ---
+    // --- COOLDOWNS  ---
     private float cdA = 0f, cdB = 0f, cdX = 0f, cdY = 0f;
 
     @Override
@@ -171,13 +171,11 @@ public class ManetteActivity extends AppCompatActivity implements WebSocketManag
     public void onSkillsConfigReceived(JSONObject config) {
         runOnUiThread(() -> {
             try {
-                // On récupère uniquement les temps de recharge (cd) envoyés par le serveur
                 cdA = (float) config.getJSONObject("A").getDouble("cd");
                 cdB = (float) config.getJSONObject("B").getDouble("cd");
                 cdX = (float) config.getJSONObject("X").getDouble("cd");
                 cdY = (float) config.getJSONObject("Y").getDouble("cd");
 
-                // Maintenant que le téléphone connaît les chronos, on configure les boutons
                 configurerBoutonsActions();
 
             } catch (Exception e) {
@@ -298,14 +296,12 @@ public class ManetteActivity extends AppCompatActivity implements WebSocketManag
         new CountDownTimer(durationMs, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                // Affiche le temps restant en secondes sur le bouton
                 int sec = (int) (millisUntilFinished / 1000) + 1;
                 bouton.setText(String.valueOf(sec));
             }
 
             @Override
             public void onFinish() {
-                // Remet le bouton dans son état normal
                 bouton.setEnabled(true);
                 bouton.setAlpha(1.0f);
                 bouton.setText(texteOriginal);

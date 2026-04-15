@@ -25,7 +25,6 @@ public class LobbyActivity extends AppCompatActivity {
         Button btnValider = findViewById(R.id.button_valider);
         Button btnRetour = findViewById(R.id.button_retour);
 
-        // 1. Récupération de TOUTES les données de l'écran précédent
         Intent intent = getIntent();
         pseudoJoueur = intent.getStringExtra("PSEUDO_JOUEUR");
         classeJoueur = intent.getStringExtra("CLASSE_CHOISIE");
@@ -38,23 +37,20 @@ public class LobbyActivity extends AppCompatActivity {
 
         title.setText("TUTORIEL : " + classeJoueur.toUpperCase());
 
-        // 2. Gestion de l'affichage de l'état de connexion
         if (estConnecte) {
             stateConnexion.setText("Statut : Prêt pour l'arène");
-            stateConnexion.setTextColor(Color.parseColor("#52B766")); // Vert
+            stateConnexion.setTextColor(Color.parseColor("#52B766"));
             btnValider.setEnabled(true);
             btnValider.setAlpha(1.0f);
         } else {
             stateConnexion.setText("Statut : Serveur injoignable");
-            stateConnexion.setTextColor(Color.parseColor("#E74C3C")); // Rouge
+            stateConnexion.setTextColor(Color.parseColor("#E74C3C"));
             btnValider.setEnabled(false);
             btnValider.setAlpha(0.5f);
         }
 
-        // Appel de la méthode pour changer les textes et icônes
         mettreAjourTutoriel();
 
-        // 3. Remplacement par des Lambdas (Code plus moderne et lisible)
         btnValider.setOnClickListener(v -> {
             Intent goManette = new Intent(LobbyActivity.this, ManetteActivity.class);
             goManette.putExtra("PSEUDO_JOUEUR", pseudoJoueur);
@@ -67,7 +63,6 @@ public class LobbyActivity extends AppCompatActivity {
 
         btnRetour.setOnClickListener(v -> {
             Intent goRetour = new Intent(LobbyActivity.this, ChoixClasseActivity.class);
-            // SÉCURITÉ : On renvoie le code de la salle en arrière pour ne pas le perdre !
             goRetour.putExtra("ROOM_CODE", roomCode);
             startActivity(goRetour);
             finish();
@@ -85,7 +80,6 @@ public class LobbyActivity extends AppCompatActivity {
         ImageView imgX = findViewById(R.id.imageView_action_X);
         ImageView imgY = findViewById(R.id.imageView_action_Y);
 
-        // 4. On définit des images par défaut AVANT le switch pour éviter les oublis
         imgA.setImageResource(R.drawable.logo);
         imgB.setImageResource(R.drawable.baseline_pending_actions_24);
         imgX.setImageResource(R.drawable.baseline_pending_actions_24);
