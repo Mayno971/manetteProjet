@@ -37,6 +37,7 @@ public class WebSocketManager {
         void onConnectionChanged(boolean isConnected);
         void onSessionClosed();
         void onStateUpdated(double healthRatio, boolean vibrate);
+        void onSkillsConfigReceived(JSONObject config);
     }
 
     public WebSocketManager(GameListener listener) {
@@ -125,6 +126,9 @@ public class WebSocketManager {
         else if (command.equals("SKILLS_CONFIG") && parts.length > 1) {
             try {
                 JSONObject config = new JSONObject(parts[1]);
+                mainHandler.post(() -> {
+                    if (listener != null) listener.onSkillsConfigReceived(config);
+                });
 
             } catch (Exception e) {
                 Log.e("WebSocketManager", "Erreur JSON Skills: " + e.getMessage());

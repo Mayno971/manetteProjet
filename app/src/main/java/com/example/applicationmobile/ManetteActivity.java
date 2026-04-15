@@ -167,6 +167,25 @@ public class ManetteActivity extends AppCompatActivity implements WebSocketManag
         }
     }
 
+    @Override
+    public void onSkillsConfigReceived(JSONObject config) {
+        runOnUiThread(() -> {
+            try {
+                // On récupère uniquement les temps de recharge (cd) envoyés par le serveur
+                cdA = (float) config.getJSONObject("A").getDouble("cd");
+                cdB = (float) config.getJSONObject("B").getDouble("cd");
+                cdX = (float) config.getJSONObject("X").getDouble("cd");
+                cdY = (float) config.getJSONObject("Y").getDouble("cd");
+
+                // Maintenant que le téléphone connaît les chronos, on configure les boutons
+                configurerBoutonsActions();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
     // ==========================================
     // CONFIGURATION DES BOUTONS D'ACTION
     // ==========================================
@@ -177,17 +196,33 @@ public class ManetteActivity extends AppCompatActivity implements WebSocketManag
         Button btnX = findViewById(R.id.btn_x);
         Button btnY = findViewById(R.id.btn_y);
 
-        // On peut laisser des labels génériques ou les récupérer via une autre méthode
-        btnA.setText("Action A");
-        btnB.setText("Action B");
-        btnX.setText("Action X");
-        btnY.setText("Action Y");
+        btnA.setText("A");
+        btnB.setText("B");
+        btnX.setText("X");
+        btnY.setText("Y");
 
-        // On envoie uniquement la LETTRE au serveur
-        btnA.setOnClickListener(v -> { faireVibrer(30); wsManager.sendInput("A"); });
-        btnB.setOnClickListener(v -> { faireVibrer(50); wsManager.sendInput("B"); });
-        btnX.setOnClickListener(v -> { faireVibrer(100); wsManager.sendInput("X"); });
-        btnY.setOnClickListener(v -> { faireVibrer(200); wsManager.sendInput("Y"); });
+        btnA.setOnClickListener(v -> {
+            faireVibrer(30);
+            if (wsManager != null) wsManager.sendInput("A");
+            if (cdA > 0) lancerCooldown(btnA, cdA);
+        });
+        btnB.setOnClickListener(v -> {
+            faireVibrer(50);
+            if (wsManager != null) wsManager.sendInput("B");
+            if (cdB > 0) lancerCooldown(btnB, cdB);
+        });
+
+        btnX.setOnClickListener(v -> {
+            faireVibrer(100);
+            if (wsManager != null) wsManager.sendInput("X");
+            if (cdX > 0) lancerCooldown(btnX, cdX);
+        });
+
+        btnY.setOnClickListener(v -> {
+            faireVibrer(200);
+            if (wsManager != null) wsManager.sendInput("Y");
+            if (cdY > 0) lancerCooldown(btnY, cdY);
+        });
     }
 
     // ==========================================
@@ -254,20 +289,23 @@ public class ManetteActivity extends AppCompatActivity implements WebSocketManag
     }
 
     private void lancerCooldown(final Button bouton, float tempsEnSecondes) {
-        final String texteOriginal = bouton.getText().toString();
+        final String texteOriginal = bouton.getText().toString(); // "A", "B", etc.
         bouton.setEnabled(false);
         bouton.setAlpha(0.5f);
 
         long durationMs = (long) (tempsEnSecondes * 1000L);
 
-        new CountDownTimer(durationMs + 500, 1000) {
+        new CountDownTimer(durationMs, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                int sec = (int) (millisUntilFinished / 1000);
-                if (sec > 0) bouton.setText(String.valueOf(sec));
+                // Affiche le temps restant en secondes sur le bouton
+                int sec = (int) (millisUntilFinished / 1000) + 1;
+                bouton.setText(String.valueOf(sec));
             }
+
             @Override
             public void onFinish() {
+                // Remet le bouton dans son état normal
                 bouton.setEnabled(true);
                 bouton.setAlpha(1.0f);
                 bouton.setText(texteOriginal);
